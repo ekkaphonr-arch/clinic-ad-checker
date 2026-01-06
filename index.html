@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Clinic Ad Checker | คู่มือโฆษณาคลินิก</title>
+  <style>
+    body { font-family: Arial, sans-serif; background:#f4f6f8; padding:40px }
+    .container { background:#fff; max-width:1100px; margin:auto; padding:30px; border-radius:12px; box-shadow:0 2px 12px rgba(0,0,0,0.08)}
+    h1 { margin:0 }
+    .muted { color:#6b7280 }
+    .danger { color:#dc2626; font-weight:bold }
+    .ok { color:#16a34a; font-weight:bold }
+    .pill { display:inline-block; padding:4px 10px; border-radius:999px; background:#e5e7eb; font-size:12px; margin-left:8px; font-weight:700 }
+    .pill.ok { background: rgba(34,197,94,0.15); color:#166534; }
+    .pill.bad { background: rgba(220,38,38,0.12); color:#991b1b; }
+    .pill.neutral { background:#e5e7eb; color:#111827; }
+    .box { margin-top:18px; padding:16px; border-radius:12px; background:#f9fafb; border:1px solid #eef2f7 }
+    ul { margin: 8px 0 0 18px; }
+    .row { display:flex; gap:14px; flex-wrap:wrap; align-items:center; }
+    .row label { white-space: nowrap; font-weight:700; }
+    select { padding:8px 10px; border-radius:10px; border:1px solid #d1d5db; background:#fff }
+    button { padding:10px 16px; margin-top:10px; margin-right:10px; cursor:pointer; border-radius:12px; border:none; font-weight:800 }
+    .check { background:#2563eb; color:#fff }
+    .rewrite { background:#16a34a; color:#fff }
+    .ghost { background:#e5e7eb; color:#111827 }
+    .statusbar { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:10px; }
+    .small { font-size:12px; }
+    .hr { height:1px; background:#eef2f7; margin:12px 0; }
+    a { color:#2563eb; text-decoration:none; }
+    a:hover { text-decoration:underline; }
+    code { background:#111827; color:#fff; padding:2px 6px; border-radius:7px; font-size:12px; }
+
+    /* Highlighter overlay */
+    .editor-wrap { position: relative; width: 100%; margin-top:12px; }
+    .highlighter {
+      position: absolute;
+      inset: 0;
+      padding: 12px;
+      font-size: 15px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      overflow: auto;
+      border: 1px solid #d1d5db;
+      border-radius: 14px;
+      background: #fff;
+      pointer-events: none;
+      color: #111827;
+    }
+    textarea.editor {
+      position: relative;
+      width: 100%;
+      height: 190px;
+      padding: 12px;
+      font-size: 15px;
+      line-height: 1.6;
+      border: 1px solid transparent;
+      border-radius: 14px;
+      background: transparent;
+      color: transparent;   /* hide text, show highlighter */
+      caret-color: #111827;
+      resize: vertical;
+      overflow: auto;
+      outline: none;
+    }
+    .hl-ok { background: rgba(34, 197, 94, 0.25); border-radius: 8px; padding: 0 2px; }
+    .hl-bad { background: rgba(220, 38, 38, 0.25); border-radius: 8px; padding: 0 2px; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>🩺 Clinic Ad Checker</h1>
+  <div class="muted">ตรวจคำโฆษณา + คู่มือ (โหลดจาก Google Sheets CSV)</div>
+
+  <div class="box">
+    <div class="statusbar">
+      <div><b>สถานะฐานข้อมูล:</b> <span id="loadStatus" class="pill neutral">กำลังโหลด…</span></div>
+      <div id="keywordCount" class="pill neutral">ใช้ได้: 0 | ใช้ไม่ได้: 0</div>
+      <div class="pill neutral" id="matchSummary">-</div>
+    </div>
+    <div class="small muted" style="margin-top:8px">
+      แหล่งข้อมูล: <a id="srcLink" target="_blank" rel="noreferrer">Google Sheets CSV</a>
+      <div class="small muted" style="margin-top:6px">
+        ถ้าเปิดแล้วไม่โหลด ให้เปิดผ่าน <b>GitHub Pages / Live Server</b> (อย่าเปิดแบบ <code>file://</code>)
+      </div>
+    </div>
+  </div>
+
+  <div class="editor-wrap">
+    <div id="highlighter" class="highlighter"></div>
+    <textarea id="inputText" class="editor" placeholder="ใส่ข้อความโฆษณาคลินิกที่นี่..."
+      oninput="syncHighlightLive()" onscroll="syncScroll()"></textarea>
+  </div>
+
+  <div>
+    <button class="check" onclick="checkText()">ตรวจคำโฆษณา</button>
+    <button class="rewrite" onclick="rewriteText()">Rewrite ให้ใช้ได้</button>
+    <button class="ghost" onclick="clearAll()">ล้างข้อความ</button>
+  </div>
+
+  <div class="box">
+    <h3>ผลการตรวจ</h3>
+    <div id="result">-</div>
+    <div class="muted small" style="margin-top:8px">ไฮไลท์สีเขียว = ใช้ได้, สีแดง = ใช้ไม่ได้</div>
+  </div>
+
+  <div class="box">
+    <h3>ข้อความหลัง Rewrite</h3>
+    <div id="rewriteResult" class="muted">-</div>
+  </div>
+
+  <div class="box">
+    <h3>📚 คู่มือคำโฆษณา (แยกตาม Topic)</h3>
+    <div class="row">
+      <label>หมวดหมู่:</label>
+      <select id="categoryFilter" onchange="onCategoryChange()">
+        <option value="all">ทั้งหมด</option>
+      </select>
+
+      <label>Topic:</label>
+      <select id="topicFilter" onchange="renderKeywordLibrary()">
+        <option value="all">ทั้งหมด</option>
+      </select>
+    </div>
+
+    <div class="hr"></div>
+    <div id="keywordLibrary"></div>
+  </div>
+</div>
+
+<script>
+/***********************
+ * ✅ ลิงก์ CSV ของคุณ (Publish to web แล้ว)
+ ***********************/
+const CSV_URL =
+  'https://docs.google.com/spreadsheets/d/e/2PACX-1vTYcW7K_bjXlX3ns7Ok_4mbb_45ogxQHwKwyw-2Im9v1iUlS96TPICBy_5t5n973tP3YB1qEB9mQTqc/pub?output=csv';
+
+document.getElementById('srcLink').href = CSV_URL;
+
+/***********************
+ * GLOBAL STATE
+ ***********************/
+const keywordLibraryData = {};
+let allowKeywords = [];   // { word }
+let forbidKeywords = [];  // { word, rewrite }
+let lastCheckSpans = [];
+
+/***********************
+ * UTILS
+ ***********************/
+function normalizeText(v) { return String(v ?? '').replace(/\r\n/g, '\n'); }
+function normalizeKey(v) { return normalizeText(v).trim().replace(/\s+/g, ' '); }
+function escapeHTML(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+}
+function escapeRegExp(s) { return String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+function buildFlexibleRegex(keyword) {
+  const raw = normalizeText(keyword).trim();
+  if (!raw) return null;
+  const parts = raw.split(/\s+/).filter(Boolean).map(escapeRegExp);
+  return parts.length ? new RegExp(parts.join('\\s+'), 'g') : null;
+}
+function dedupeByWord(list) {
+  const seen = new Set();
+  return list.filter(x => {
+    const k = normalizeKey(x.word);
+    if (!k || seen.has(k)) return false;
+    seen.add(k); return true;
+  });
+}
+function setPill(el, type, text) {
+  el.classList.remove('ok','bad','neutral');
+  el.classList.add(type);
+  el.textContent = text;
+}
+
+/***********************
+ * CSV PARSER (รองรับ quote/comma/newline)
+ ***********************/
+function parseCSV(text) {
+  const s = String(text ?? '').replace(/^\uFEFF/, '');
+  const rows = [];
+  let row = [];
+  let field = '';
+  let i = 0;
+  let inQuotes = false;
+
+  while (i < s.length) {
+    const c = s[i];
+    if (inQuotes) {
+      if (c === '"') {
+        if (s[i + 1] === '"') { field += '"'; i += 2; continue; }
+        inQuotes = false; i++; continue;
+      }
+      field += c; i++; continue;
+    } else {
+      if (c === '"') { inQuotes = true; i++; continue; }
+      if (c === ',') { row.push(field); field = ''; i++; continue; }
+      if (c === '\n') { row.push(field); rows.push(row); row = []; field = ''; i++; continue; }
+      if (c === '\r') { i++; continue; }
+      field += c; i++; continue;
+    }
+  }
+  row.push(field);
+  rows.push(row);
+  return rows;
+}
+function findColIndex(headers, candidates) {
+  const h = headers.map(x => normalizeKey(x));
+  for (const c of candidates) {
+    const idx = h.indexOf(normalizeKey(c));
+    if (idx >= 0) return idx;
+  }
+  return -1;
+}
+
+/***********************
+ * HIGHLIGHTER
+ ***********************/
+function syncScroll() {
+  const ta = document.getElementById('inputText');
+  const hl = document.getElementById('highlighter');
+  hl.scrollTop = ta.scrollTop;
+  hl.scrollLeft = ta.scrollLeft;
+}
+function mergeSpans(spans) {
+  if (!spans.length) return [];
+  spans.sort((a,b) => a.start - b.start || (b.end-b.start)-(a.end-a.start));
+  const merged = [];
+  for (const s of spans) {
+    if (!merged.length) { merged.push({...s}); continue; }
+    const last = merged[merged.length-1];
+    if (s.start >= last.end) { merged.push({...s}); continue; }
+    // overlap: bad wins
+    if (last.type === 'bad') last.end = Math.max(last.end, s.end);
+    else if (s.type === 'bad') {
+      if (s.start > last.start) { last.end = s.start; merged.push({...s}); }
+      else merged[merged.length-1] = {...s};
+    } else last.end = Math.max(last.end, s.end);
+  }
+  return merged;
+}
+function renderHighlightWithSpans(text, spans) {
+  const original = normalizeText(text);
+  if (!original) return '';
+  if (!spans || !spans.length) return escapeHTML(original);
+
+  const merged = mergeSpans(spans);
+  let out = '';
+  let cursor = 0;
+  for (const s of merged) {
+    if (s.start > cursor) out += escapeHTML(original.slice(cursor, s.start));
+    const chunk = escapeHTML(original.slice(s.start, s.end));
+    out += `<span class="${s.type === 'bad' ? 'hl-bad' : 'hl-ok'}">${chunk}</span>`;
+    cursor = s.end;
+  }
+  if (cursor < original.length) out += escapeHTML(original.slice(cursor));
+  return out;
+}
+function buildHighlights(text) {
+  const original = normalizeText(text);
+  if (!original) return '';
+  const spans = [];
+
+  const push = (list, type) => {
+    list.forEach(k => {
+      const rx = buildFlexibleRegex(k.word);
+      if (!rx) return;
+      let m;
+      while ((m = rx.exec(original)) !== null) {
+        if (!m[0]) { rx.lastIndex++; continue; }
+        spans.push({ start: m.index, end: m.index + m[0].length, type });
+      }
+    });
+  };
+
+  push(allowKeywords, 'ok');
+  push(forbidKeywords, 'bad');
+  return renderHighlightWithSpans(original, spans);
+}
+function syncHighlightLive() {
+  const ta = document.getElementById('inputText');
+  document.getElementById('highlighter').innerHTML = buildHighlights(ta.value);
+  syncScroll();
+}
+
+/***********************
+ * CHECK & REWRITE
+ ***********************/
+function checkText() {
+  const text = normalizeText(document.getElementById('inputText').value || '');
+  const resultDiv = document.getElementById('result');
+  const summary = document.getElementById('matchSummary');
+
+  if (!allowKeywords.length && !forbidKeywords.length) {
+    resultDiv.innerHTML = '<span class="muted">ยังไม่มีฐานข้อมูลคำ (ตรวจสอบการโหลด Google Sheets)</span>';
+    summary.textContent = '-';
+    syncHighlightLive();
+    return;
+  }
+
+  const foundOk = [];
+  const foundBad = [];
+
+  const scan = (list, sink) => {
+    for (const k of list) {
+      const rx = buildFlexibleRegex(k.word);
+      if (!rx) continue;
+      if (rx.test(text)) sink.push(k);
+    }
+  };
+
+  scan(forbidKeywords, foundBad);
+  scan(allowKeywords, foundOk);
+
+  const okU = dedupeByWord(foundOk);
+  const badU = dedupeByWord(foundBad);
+
+  summary.textContent = `พบ: ใช้ไม่ได้ ${badU.length} | ใช้ได้ ${okU.length}`;
+
+  if (!okU.length && !badU.length) {
+    resultDiv.innerHTML = '<span class="ok">✅ ไม่พบคำในฐานข้อมูล</span>';
+    return;
+  }
+
+  let html = '';
+  if (badU.length) {
+    html += `<div class="danger">✘ พบคำที่ใช้ไม่ได้ (${badU.length})</div>`;
+    html += '<ul>' + badU.map(x => `<li><span class="danger">${escapeHTML(x.word)}</span></li>`).join('') + '</ul>';
+  }
+  if (okU.length) {
+    html += `<div class="ok" style="margin-top:10px">✔ พบคำที่ใช้ได้ (${okU.length})</div>`;
+    html += '<ul>' + okU.map(x => `<li><span class="ok">${escapeHTML(x.word)}</span></li>`).join('') + '</ul>';
+  }
+  resultDiv.innerHTML = html;
+}
+
+function rewriteText() {
+  let text = normalizeText(document.getElementById('inputText').value || '');
+
+  if (!forbidKeywords.length) {
+    document.getElementById('rewriteResult').innerText = text || '-';
+    return;
+  }
+
+  const sorted = forbidKeywords
+    .filter(k => k.word)
+    .slice()
+    .sort((a, b) => (b.word.length - a.word.length));
+
+  for (const item of sorted) {
+    const rx = buildFlexibleRegex(item.word);
+    if (!rx) continue;
+    const replacement = (item.rewrite && item.rewrite.trim())
+      ? item.rewrite.trim()
+      : 'ปรับถ้อยคำให้เป็นกลาง';
+    text = text.replace(rx, replacement);
+  }
+
+  text += '\n\n*อ้างอิงถ้อยคำจากฐานข้อมูลภายใน (Google Sheets) ที่ฝ่าย Marketing ดูแล';
+  text += '\n*ผลลัพธ์ขึ้นอยู่กับแต่ละบุคคล และต้องได้รับการประเมินโดยแพทย์';
+
+  document.getElementById('rewriteResult').innerText = text || '-';
+}
+
+function clearAll() {
+  document.getElementById('inputText').value = '';
+  document.getElementById('result').innerHTML = '-';
+  document.getElementById('rewriteResult').innerHTML = '<span class="muted">-</span>';
+  document.getElementById('matchSummary').textContent = '-';
+  syncHighlightLive();
+}
+
+/***********************
+ * FILTERS + GUIDE
+ ***********************/
+function rebuildCategoryFilter() {
+  const select = document.getElementById('categoryFilter');
+  const current = select.value;
+  select.innerHTML = '<option value="all">ทั้งหมด</option>';
+  Object.keys(keywordLibraryData)
+    .sort((a,b) => a.localeCompare(b,'th'))
+    .forEach(cat => {
+      const opt = document.createElement('option');
+      opt.value = cat;
+      opt.textContent = cat;
+      select.appendChild(opt);
+    });
+  if (current && current !== 'all' && keywordLibraryData[current]) select.value = current;
+  else select.value = 'all';
+}
+function rebuildTopicFilter() {
+  const cat = document.getElementById('categoryFilter').value;
+  const topicSelect = document.getElementById('topicFilter');
+  const current = topicSelect.value;
+
+  topicSelect.innerHTML = '<option value="all">ทั้งหมด</option>';
+  const set = new Set();
+  if (cat === 'all') {
+    Object.keys(keywordLibraryData).forEach(c => Object.keys(keywordLibraryData[c] || {}).forEach(t => set.add(t)));
+  } else {
+    Object.keys(keywordLibraryData[cat] || {}).forEach(t => set.add(t));
+  }
+  Array.from(set).sort((a,b)=>a.localeCompare(b,'th')).forEach(t => {
+    const opt = document.createElement('option');
+    opt.value = t;
+    opt.textContent = t;
+    topicSelect.appendChild(opt);
+  });
+
+  if (current && current !== 'all' && set.has(current)) topicSelect.value = current;
+  else topicSelect.value = 'all';
+}
+function onCategoryChange() {
+  rebuildTopicFilter();
+  renderKeywordLibrary();
+}
+function renderKeywordLibrary() {
+  const category = document.getElementById('categoryFilter').value;
+  const topic = document.getElementById('topicFilter').value;
+  const container = document.getElementById('keywordLibrary');
+
+  const sortNum = (a,b) => (a.no ?? 1e15) - (b.no ?? 1e15);
+
+  let html = '';
+  const cats = (category === 'all') ? Object.keys(keywordLibraryData) : [category];
+
+  cats.filter(c => !!keywordLibraryData[c])
+    .sort((a,b)=>a.localeCompare(b,'th'))
+    .forEach(cat => {
+      const topicsObj = keywordLibraryData[cat];
+      const topicKeys = Object.keys(topicsObj).filter(tk => topic === 'all' ? true : tk === topic);
+      if (!topicKeys.length) return;
+
+      html += `<div style="margin-bottom:22px"><h3>📌 ${escapeHTML(cat)}</h3>`;
+
+      for (const tk of topicKeys) {
+        const t = topicsObj[tk];
+        const title = normalizeKey(t.topic) || '(ไม่มีชื่อ Topic)';
+
+        const allow = (t.allowItems||[]).slice().sort(sortNum);
+        const forbid = (t.forbidItems||[]).slice().sort(sortNum);
+
+        html += `<div style="margin-left:12px;margin-bottom:14px"><h4>${escapeHTML(title)}</h4>`;
+
+        let n = 1;
+        for (const it of allow) {
+          html += `<div>${n}. <span class="ok">✔ ใช้ได้</span>: ${escapeHTML(it.keyword)}</div>`;
+          n++;
+        }
+        for (const it of forbid) {
+          html += `<div>${n}. <span class="danger">✘ ใช้ไม่ได้</span>: ${escapeHTML(it.keyword)}${
+            it.rewrite ? ` <span class="muted small">(แนะนำ: ${escapeHTML(it.rewrite)})</span>` : ''
+          }</div>`;
+          n++;
+        }
+        html += `</div>`;
+      }
+
+      html += `</div>`;
+    });
+
+  container.innerHTML = html || '<i class="muted">ไม่พบข้อมูล</i>';
+}
+
+/***********************
+ * LOAD FROM GOOGLE SHEETS (CSV)
+ * ✅ map ตามหัวตารางรูปที่คุณส่ง:
+ * Category | หัวข้อเรื่อง (TOPIC) | No. | Keyword (คำที่ต้องการตรวจ) | Status | คำที่สามารถใช้โฆษณาได้ | ...
+ ***********************/
+async function loadFromGoogleSheets() {
+  const statusEl = document.getElementById('loadStatus');
+
+  try {
+    setPill(statusEl, 'neutral', 'กำลังโหลด…');
+
+    const res = await fetch(CSV_URL, { cache: 'no-store' });
+    const raw = await res.text();
+
+    // ถ้า fetch ไม่ได้จริง ๆ จะไม่ถึงบรรทัดนี้ หรือ raw เป็น HTML
+    if (raw.trim().startsWith('<')) {
+      throw new Error('Google returned HTML. (เปิดผ่าน file:// หรือมี redirect/permission)');
+    }
+
+    const table = parseCSV(raw);
+    if (!table.length) throw new Error('Empty CSV');
+
+    const headers = table[0] || [];
+
+    const idxCategory = findColIndex(headers, [
+      'Category (สามารถเลือกหมวดหมู่ได้เองตามหัวข้อต้องการ)',
+      'Category','หมวดหมู่'
+    ]);
+    const idxTopic = findColIndex(headers, [
+      'หัวข้อเรื่อง (TOPIC)','TOPIC','Topic','หัวข้อเรื่อง','หัวข้อ'
+    ]);
+    const idxNo = findColIndex(headers, ['No.','No','ลำดับ','#']);
+    const idxKeyword = findColIndex(headers, [
+      'Keyword (คำที่ต้องการตรวจ)','Keyword','คำที่ต้องการตรวจ','คำ'
+    ]);
+    const idxStatus = findColIndex(headers, ['Status','สถานะ','ใช้ได้/ใช้ไม่ได้']);
+    const idxRewrite = findColIndex(headers, [
+      'คำที่สามารถใช้โฆษณาได้','Rewrite','คำแนะนำ','ปรับเป็น'
+    ]);
+
+    const useFallback = (idxKeyword < 0 || idxStatus < 0);
+
+    // reset
+    allowKeywords = [];
+    forbidKeywords = [];
+    lastCheckSpans = [];
+    Object.keys(keywordLibraryData).forEach(k => delete keywordLibraryData[k]);
+
+    const rows = table.slice(1);
+
+    rows.forEach(r => {
+      const cells = r.map(x => normalizeText(x));
+
+      const categoryRaw = useFallback ? cells[0] : (cells[idxCategory] ?? '');
+      const topicRaw    = useFallback ? cells[1] : (cells[idxTopic] ?? '');
+      const noRaw       = useFallback ? cells[2] : (cells[idxNo] ?? '');
+      const keywordRaw  = useFallback ? cells[3] : (cells[idxKeyword] ?? '');
+      const statusRaw   = useFallback ? cells[4] : (cells[idxStatus] ?? '');
+      const rewriteRaw  = useFallback ? cells[5] : (cells[idxRewrite] ?? '');
+
+      const keyword = normalizeText(keywordRaw).trim();
+      if (!keyword) return;
+
+      const status = normalizeKey(statusRaw);
+      const isAllow = status.startsWith('ใช้ได้');
+      const isForbid = status.startsWith('ใช้ไม่ได้');
+      if (!isAllow && !isForbid) return;
+
+      const category = normalizeKey(categoryRaw);
+      const topic = normalizeKey(topicRaw);
+      const parsedNo = Number.isFinite(Number(noRaw)) ? Number(noRaw) : NaN;
+      const rewrite = normalizeText(rewriteRaw).trim();
+
+      if (isAllow) allowKeywords.push({ word: keyword });
+      if (isForbid) forbidKeywords.push({ word: keyword, rewrite });
+
+      if (!category || !topic) return;
+      if (!keywordLibraryData[category]) keywordLibraryData[category] = {};
+      if (!keywordLibraryData[category][topic]) {
+        keywordLibraryData[category][topic] = { topic, allowItems: [], forbidItems: [] };
+      }
+      if (isAllow) keywordLibraryData[category][topic].allowItems.push({ no: parsedNo, keyword });
+      if (isForbid) keywordLibraryData[category][topic].forbidItems.push({ no: parsedNo, keyword, rewrite });
+    });
+
+    allowKeywords = dedupeByWord(allowKeywords);
+    forbidKeywords = dedupeByWord(forbidKeywords);
+
+    document.getElementById('keywordCount').textContent =
+      `ใช้ได้: ${allowKeywords.length} | ใช้ไม่ได้: ${forbidKeywords.length}`;
+
+    rebuildCategoryFilter();
+    rebuildTopicFilter();
+    renderKeywordLibrary();
+    syncHighlightLive();
+
+    setPill(statusEl, 'ok', 'พร้อมใช้งาน');
+  } catch (e) {
+    console.error(e);
+    setPill(statusEl, 'bad', 'โหลดไม่สำเร็จ');
+    document.getElementById('keywordLibrary').innerHTML =
+      `<div class="danger">โหลดข้อมูลจาก Google Sheets ไม่สำเร็จ</div>
+       <div class="muted small" style="margin-top:6px">
+         สาเหตุที่พบบ่อย:<br/>
+         1) เปิดไฟล์แบบ <code>file://</code> → เบราว์เซอร์บล็อก fetch<br/>
+         2) ต้องเปิดผ่าน <b>GitHub Pages (https)</b> หรือ <b>Live Server</b><br/>
+       </div>`;
+  }
+}
+
+/***********************
+ * INIT
+ ***********************/
+loadFromGoogleSheets();
+</script>
+</body>
+</html>
