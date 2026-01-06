@@ -83,7 +83,6 @@
     <div class="small muted" style="margin-top:8px">
       แหล่งข้อมูล: <a id="srcLink" target="_blank" rel="noreferrer">Google Sheets CSV</a>
       <div class="small muted" style="margin-top:6px">
-        ถ้าเปิดแล้วไม่โหลด ให้เปิดผ่าน <b>GitHub Pages</b> หรือ <b>VSCode Live Server</b> (อย่าเปิดแบบ <code>file://</code>)
       </div>
     </div>
   </div>
@@ -366,8 +365,7 @@ function rewriteText() {
     text = text.replace(rx, replacement);
   }
 
-  text += '\n\n*อ้างอิงถ้อยคำจากฐานข้อมูลภายใน (Google Sheets) ที่ฝ่าย Marketing ดูแล';
-  text += '\n*ผลลัพธ์ขึ้นอยู่กับแต่ละบุคคล และต้องได้รับการประเมินโดยแพทย์';
+  text += '\n\n*อ้างอิงถ้อยคำจากฐานข้อมูลภายใน (Google Sheets) ที่ฝ่าย AE/Content ดูแล';
 
   document.getElementById('rewriteResult').innerText = text || '-';
 }
