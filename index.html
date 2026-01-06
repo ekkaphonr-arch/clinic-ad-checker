@@ -66,6 +66,9 @@
     }
     .hl-ok { background: rgba(34, 197, 94, 0.25); border-radius: 8px; padding: 0 2px; }
     .hl-bad { background: rgba(220, 38, 38, 0.25); border-radius: 8px; padding: 0 2px; }
+
+    .topicTitle { margin: 14px 0 8px; }
+    .catTitle { margin: 0 0 10px; }
   </style>
 </head>
 <body>
@@ -82,7 +85,7 @@
     <div class="small muted" style="margin-top:8px">
       แหล่งข้อมูล: <a id="srcLink" target="_blank" rel="noreferrer">Google Sheets CSV</a>
       <div class="small muted" style="margin-top:6px">
-        ถ้าเปิดแล้วไม่โหลด ให้เปิดผ่าน <b>GitHub Pages / Live Server</b> (อย่าเปิดแบบ <code>file://</code>)
+        ถ้าเปิดแล้วไม่โหลด ให้เปิดผ่าน <b>GitHub Pages</b> หรือ <b>VSCode Live Server</b> (อย่าเปิดแบบ <code>file://</code>)
       </div>
     </div>
   </div>
@@ -380,6 +383,7 @@ function rebuildCategoryFilter() {
   const select = document.getElementById('categoryFilter');
   const current = select.value;
   select.innerHTML = '<option value="all">ทั้งหมด</option>';
+
   Object.keys(keywordLibraryData)
     .sort((a,b) => a.localeCompare(b,'th'))
     .forEach(cat => {
@@ -388,21 +392,25 @@ function rebuildCategoryFilter() {
       opt.textContent = cat;
       select.appendChild(opt);
     });
+
   if (current && current !== 'all' && keywordLibraryData[current]) select.value = current;
   else select.value = 'all';
 }
+
 function rebuildTopicFilter() {
   const cat = document.getElementById('categoryFilter').value;
   const topicSelect = document.getElementById('topicFilter');
   const current = topicSelect.value;
 
   topicSelect.innerHTML = '<option value="all">ทั้งหมด</option>';
+
   const set = new Set();
   if (cat === 'all') {
     Object.keys(keywordLibraryData).forEach(c => Object.keys(keywordLibraryData[c] || {}).forEach(t => set.add(t)));
   } else {
     Object.keys(keywordLibraryData[cat] || {}).forEach(t => set.add(t));
   }
+
   Array.from(set).sort((a,b)=>a.localeCompare(b,'th')).forEach(t => {
     const opt = document.createElement('option');
     opt.value = t;
@@ -413,10 +421,12 @@ function rebuildTopicFilter() {
   if (current && current !== 'all' && set.has(current)) topicSelect.value = current;
   else topicSelect.value = 'all';
 }
+
 function onCategoryChange() {
   rebuildTopicFilter();
   renderKeywordLibrary();
 }
+
 function renderKeywordLibrary() {
   const category = document.getElementById('categoryFilter').value;
   const topic = document.getElementById('topicFilter').value;
@@ -434,7 +444,19 @@ function renderKeywordLibrary() {
       const topicKeys = Object.keys(topicsObj).filter(tk => topic === 'all' ? true : tk === topic);
       if (!topicKeys.length) return;
 
-      html += `<div style="margin-bottom:22px"><h3>📌 ${escapeHTML(cat)}</h3>`;
+      html += `<div style="margin-bottom:22px">
+                <h3 class="catTitle">📌 ${escapeHTML(cat)}</h3>`;
+
+      // sort topicKeys by min no (เพื่อให้เรียงเหมือนชีต)
+      topicKeys.sort((ka,kb) => {
+        const A = topicsObj[ka];
+        const B = topicsObj[kb];
+        const numsA = (A.allowItems||[]).concat(A.forbidItems||[]).map(x => x.no).filter(n => Number.isFinite(n));
+        const numsB = (B.allowItems||[]).concat(B.forbidItems||[]).map(x => x.no).filter(n => Number.isFinite(n));
+        const minA = numsA.length ? Math.min(...numsA) : 1e15;
+        const minB = numsB.length ? Math.min(...numsB) : 1e15;
+        return minA - minB;
+      });
 
       for (const tk of topicKeys) {
         const t = topicsObj[tk];
@@ -443,7 +465,8 @@ function renderKeywordLibrary() {
         const allow = (t.allowItems||[]).slice().sort(sortNum);
         const forbid = (t.forbidItems||[]).slice().sort(sortNum);
 
-        html += `<div style="margin-left:12px;margin-bottom:14px"><h4>${escapeHTML(title)}</h4>`;
+        html += `<div style="margin-left:12px;margin-bottom:14px">
+                  <h4 class="topicTitle">${escapeHTML(title)}</h4>`;
 
         let n = 1;
         for (const it of allow) {
@@ -456,6 +479,7 @@ function renderKeywordLibrary() {
           }</div>`;
           n++;
         }
+
         html += `</div>`;
       }
 
@@ -466,9 +490,7 @@ function renderKeywordLibrary() {
 }
 
 /***********************
- * LOAD FROM GOOGLE SHEETS (CSV)
- * ✅ map ตามหัวตารางรูปที่คุณส่ง:
- * Category | หัวข้อเรื่อง (TOPIC) | No. | Keyword (คำที่ต้องการตรวจ) | Status | คำที่สามารถใช้โฆษณาได้ | ...
+ * LOAD FROM GOOGLE SHEETS (CSV) — ✅ แก้แล้วให้คู่มือขึ้นแน่นอน
  ***********************/
 async function loadFromGoogleSheets() {
   const statusEl = document.getElementById('loadStatus');
@@ -479,9 +501,8 @@ async function loadFromGoogleSheets() {
     const res = await fetch(CSV_URL, { cache: 'no-store' });
     const raw = await res.text();
 
-    // ถ้า fetch ไม่ได้จริง ๆ จะไม่ถึงบรรทัดนี้ หรือ raw เป็น HTML
     if (raw.trim().startsWith('<')) {
-      throw new Error('Google returned HTML. (เปิดผ่าน file:// หรือมี redirect/permission)');
+      throw new Error('Google returned HTML (redirect/permission)');
     }
 
     const table = parseCSV(raw);
@@ -489,6 +510,7 @@ async function loadFromGoogleSheets() {
 
     const headers = table[0] || [];
 
+    // ✅ mapping ตามหัวตารางของคุณ
     const idxCategory = findColIndex(headers, [
       'Category (สามารถเลือกหมวดหมู่ได้เองตามหัวข้อต้องการ)',
       'Category','หมวดหมู่'
@@ -518,19 +540,21 @@ async function loadFromGoogleSheets() {
     rows.forEach(r => {
       const cells = r.map(x => normalizeText(x));
 
-      const categoryRaw = useFallback ? cells[0] : (cells[idxCategory] ?? '');
-      const topicRaw    = useFallback ? cells[1] : (cells[idxTopic] ?? '');
-      const noRaw       = useFallback ? cells[2] : (cells[idxNo] ?? '');
-      const keywordRaw  = useFallback ? cells[3] : (cells[idxKeyword] ?? '');
-      const statusRaw   = useFallback ? cells[4] : (cells[idxStatus] ?? '');
-      const rewriteRaw  = useFallback ? cells[5] : (cells[idxRewrite] ?? '');
+      const categoryRaw = useFallback ? (cells[0] ?? '') : (cells[idxCategory] ?? '');
+      const topicRaw    = useFallback ? (cells[1] ?? '') : (cells[idxTopic] ?? '');
+      const noRaw       = useFallback ? (cells[2] ?? '') : (cells[idxNo] ?? '');
+      const keywordRaw  = useFallback ? (cells[3] ?? '') : (cells[idxKeyword] ?? '');
+      const statusRaw   = useFallback ? (cells[4] ?? '') : (cells[idxStatus] ?? '');
+      const rewriteRaw  = useFallback ? (cells[5] ?? '') : (cells[idxRewrite] ?? '');
 
       const keyword = normalizeText(keywordRaw).trim();
       if (!keyword) return;
 
-      const status = normalizeKey(statusRaw);
-      const isAllow = status.startsWith('ใช้ได้');
-      const isForbid = status.startsWith('ใช้ไม่ได้');
+      // ✅ แก้ status ให้ยืดหยุ่น (รองรับ ✅/❌/ข้อความอื่นนำหน้า)
+      const s = normalizeKey(statusRaw);
+      const isForbid = s.includes('ใช้ไม่ได้') || s.includes('ห้ามใช้') || s.includes('ห้าม');
+      const isAllow  = !isForbid && (s.includes('ใช้ได้') || s.includes('อนุญาต') || s.includes('ผ่าน'));
+
       if (!isAllow && !isForbid) return;
 
       const category = normalizeKey(categoryRaw);
@@ -541,6 +565,7 @@ async function loadFromGoogleSheets() {
       if (isAllow) allowKeywords.push({ word: keyword });
       if (isForbid) forbidKeywords.push({ word: keyword, rewrite });
 
+      // ✅ สร้างคู่มือ: ต้องมี category + topic
       if (!category || !topic) return;
       if (!keywordLibraryData[category]) keywordLibraryData[category] = {};
       if (!keywordLibraryData[category][topic]) {
@@ -568,9 +593,8 @@ async function loadFromGoogleSheets() {
     document.getElementById('keywordLibrary').innerHTML =
       `<div class="danger">โหลดข้อมูลจาก Google Sheets ไม่สำเร็จ</div>
        <div class="muted small" style="margin-top:6px">
-         สาเหตุที่พบบ่อย:<br/>
-         1) เปิดไฟล์แบบ <code>file://</code> → เบราว์เซอร์บล็อก fetch<br/>
-         2) ต้องเปิดผ่าน <b>GitHub Pages (https)</b> หรือ <b>Live Server</b><br/>
+         สาเหตุที่พบบ่อย: เปิดจาก <code>file://</code> → เบราว์เซอร์บล็อก fetch<br/>
+         ให้เปิดผ่าน <b>GitHub Pages</b> หรือ <b>Live Server</b>
        </div>`;
   }
 }
