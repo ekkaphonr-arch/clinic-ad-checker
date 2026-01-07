@@ -76,7 +76,7 @@
 <div class="container">
   <h1>🩺 Clinic Ad Checker</h1>
   <div class="muted">ตรวจคำโฆษณา + คู่มือ (โหลดจาก Google Sheets CSV)</div>
-  <div class="muted small">Version: v4-auto-alias (botox-fix)</div>
+  <div class="muted small">Version: v5-paren-split (thai/eng match)</div>
 
   <div class="box">
     <div class="statusbar">
@@ -110,7 +110,7 @@
     <div class="muted small" style="margin-top:8px">
       ไฮไลท์สีเขียว = ใช้ได้, สีแดง = ใช้ไม่ได้
       <div class="small muted" style="margin-top:4px">
-        * ระบบมี “Auto-Alias” ช่วยจับคำตัดท้าย เช่น โบท็อกซ์ → โบท็อก
+        * ระบบมี “Auto-Alias” เช่น รีจูรัน (REJURAN) → รีจูรัน / REJURAN
       </div>
     </div>
   </div>
@@ -151,8 +151,8 @@ document.getElementById('srcLink').href = CSV_URL;
  * (OPTIONAL) เพิ่ม whitelist เองได้
  ***********************/
 const EXTRA_WHITELIST_TOKENS = [
-  'botox','filler','hifu','messo','meso','rf','ulthera','thermage',
-  'โบท็อก','โบทอก','ฟิลเลอร์','ไฮฟู','เมโส','ร้อยไหม','เลเซอร์','ฉีด','ทำ'
+  'botox','filler','hifu','meso','ulthera','thermage','rejuran',
+  'โบท็อก','โบทอก','ฟิลเลอร์','ไฮฟู','เมโส','ร้อยไหม','เลเซอร์','รีจูรัน'
 ];
 
 /***********************
@@ -253,8 +253,7 @@ function parseAliases(raw) {
 }
 
 /***********************
- * ✅ AUTO-ALIASES (สำคัญ: โบท็อกซ์ -> โบท็อก)
- * - ถ้าคำลงท้ายด้วย "ซ์/ส์/ต์/ด์/..." ที่มักมีการันต์ จะตัดท้ายให้
+ * ✅ AUTO-ALIASES: แยกวงเล็บ ไทย/อังกฤษ + ตัดท้ายพวก ซ์/ส์/ต์/ด์ ฯลฯ
  ***********************/
 function generateAutoAliases(word) {
   const w = normalizeText(word || '').trim();
@@ -262,44 +261,60 @@ function generateAutoAliases(word) {
 
   const out = new Set();
 
-  // 1) ถ้าลงท้ายด้วย "ซ์" / "ส์" / "ต์" / "ด์" / "ษ์" / "ร์" / "ล์" / "น์" ฯลฯ
-  // ตัดท้าย 1-2 ตัว (รวมการันต์)
-  const patterns = [
-    /ซ์\s*$/u, /ส์\s*$/u, /ต์\s*$/u, /ด์\s*$/u, /ษ์\s*$/u, /ร์\s*$/u, /ล์\s*$/u, /น์\s*$/u,
-    /ซ์\s*$/u, /ซ\s*$/u // เผื่อ CSV บางตัวหลุดการันต์
-  ];
+  // A) แยกวงเล็บ: รองรับ () และ （）
+  // - alias ตัดวงเล็บออก: "รีจูรัน (REJURAN)" -> "รีจูรัน"
+  const noParen = w.replace(/\s*[\(\（].*?[\)\）]\s*/g, ' ').replace(/\s+/g,' ').trim();
+  if (noParen && noParen !== w) out.add(noParen);
 
+  // - alias ดึงข้อความในวงเล็บ: -> "REJURAN"
+  const matches = w.matchAll(/[\(\（]\s*([^)\）]+?)\s*[\)\）]/g);
+  for (const m of matches) {
+    const inside = (m && m[1]) ? m[1].trim() : '';
+    if (!inside) continue;
+    out.add(inside);
+
+    // ถ้าในวงเล็บมีหลาย token เช่น "A/B" หรือ "A, B" ให้แตกเพิ่ม
+    inside.split(/[\/,|]+/g).map(x=>x.trim()).filter(Boolean).forEach(x => out.add(x));
+  }
+
+  // B) ตัดท้ายคำที่มักพิมพ์หาย (โบท็อกซ์ -> โบท็อก)
+  const patterns = [/ซ์\s*$/u, /ส์\s*$/u, /ต์\s*$/u, /ด์\s*$/u, /ษ์\s*$/u, /ร์\s*$/u, /ล์\s*$/u, /น์\s*$/u, /์\s*$/u];
   for (const p of patterns) {
     if (p.test(w)) {
-      let a = w.replace(p, '').trim();
+      const a = w.replace(p, '').trim();
       if (a.length >= 3) out.add(a);
+    }
+    if (p.test(noParen)) {
+      const a2 = noParen.replace(p, '').trim();
+      if (a2.length >= 3) out.add(a2);
     }
   }
 
-  // 2) ถ้ามี "์" ในคำ โดยเฉพาะท้ายคำ ให้ลองตัดออกทั้งกลุ่มท้าย
-  // เช่น "xxxก์" -> "xxx"
-  if (/์\s*$/u.test(w)) {
-    let a = w.replace(/[\u0E00-\u0E7F]์\s*$/u, '').trim();
-    if (a.length >= 3) out.add(a);
-  }
+  // C) ภาษาอังกฤษ: lower/upper
+  const addCase = (s) => {
+    if (!s) return;
+    if (/[a-zA-Z]/.test(s)) {
+      out.add(s.toLowerCase());
+      out.add(s.toUpperCase());
+    }
+  };
+  addCase(w);
+  addCase(noParen);
+  for (const x of Array.from(out)) addCase(x);
 
-  // 3) ภาษาอังกฤษ: สร้างรูปแบบ lower/upper แบบง่าย
-  if (/[a-zA-Z]/.test(w)) {
-    out.add(w.toLowerCase());
-    out.add(w.toUpperCase());
-  }
-
-  // 4) เพิ่มเวอร์ชัน "ตัดช่องว่าง" (เผื่อคนพิมพ์ติด)
+  // D) เวอร์ชันตัดช่องว่าง (เผื่อคนพิมพ์ติด)
   out.add(w.replace(/\s+/g,''));
+  out.add(noParen.replace(/\s+/g,''));
 
-  // ลบตัวเองซ้ำ
+  // ลบตัวเอง
   out.delete(w);
 
-  return Array.from(out);
+  // กัน alias สั้นเกิน
+  return Array.from(out).map(x=>x.trim()).filter(x => x && x.length >= 2);
 }
 
 /***********************
- * WHITELIST / NORMALIZE / FUZZY
+ * WHITELIST / NORMALIZE / FUZZY (ใช้แบบเดิม)
  ***********************/
 function normalizeThaiLite(s) {
   return String(s || '')
@@ -332,8 +347,6 @@ function levenshtein(a, b) {
 }
 
 function tokenizeUserText(raw) {
-  // ไทยอาจไม่มีช่องว่าง -> token อาจเป็นประโยคยาว
-  // เลยจะใช้ token จาก space ก่อน + และเพิ่ม token แบบ "ตัดคำจาก whitelist" ตอน fuzzy อีกที
   return String(raw || '')
     .split(/[\s,.;:!?()\[\]{}"“”'‘’\-_/\\|]+/g)
     .map(x => x.trim())
@@ -382,7 +395,6 @@ function isWhitelistedToken(token) {
   return false;
 }
 
-/** Loose regex สำหรับไทย */
 function buildLooseThaiRegex(keyword) {
   const raw = String(keyword || '').trim();
   if (!raw) return null;
@@ -397,10 +409,6 @@ function buildLooseThaiRegex(keyword) {
   return new RegExp(pattern, 'gi');
 }
 
-/**
- * ✅ เพิ่ม: Extract tokens จาก whitelist ที่ “ซ่อนอยู่ในประโยค”
- * เช่น "สนใจทำโบท็อก" -> จะดึง token "โบท็อก" ออกมาเพิ่ม
- */
 function extractWhitelistSubtokens(text) {
   const tN = normalizeThaiLite(text);
   const out = [];
@@ -418,7 +426,6 @@ function fuzzyHitKeywordWhitelisted(userText, keyword) {
   if (!kwN || kwN.length < 3) return { hit:false };
 
   const tokens = tokenizeUserText(userText);
-  // เพิ่ม subtokens ที่มาจาก whitelist
   const extra = extractWhitelistSubtokens(userText);
   const allTokens = tokens.concat(extra);
 
@@ -430,20 +437,9 @@ function fuzzyHitKeywordWhitelisted(userText, keyword) {
     const tN = normalizeThaiLite(t);
     if (!tN) continue;
 
-    // ✅ สำคัญ: ถ้า token เป็น "ส่วนหนึ่ง" ของ keyword หรือ keyword เป็นส่วนหนึ่งของ token ให้ผ่านได้
-    // เช่น token = โบท็อก , keyword = โบท็อกซ์ (หลัง normalize จะใกล้กันมากขึ้น)
-    if (tN.includes(kwN) || kwN.includes(tN)) {
-      if (tN.length <= 3 && kwN.length > tN.length) continue;
-      return { hit:true, sample:t, dist:0 };
-    }
-
-    // ถ้าต่างความยาวมากเกินไป แต่ token ยาวกว่า keyword และมี keyword สั้นเป็นส่วนหนึ่ง -> ผ่าน
-    if (tN.length > kwN.length + 3 && tN.includes(kwN)) {
-      return { hit:true, sample:t, dist:0 };
-    }
+    if (tN.includes(kwN) || kwN.includes(tN)) return { hit:true, sample:t, dist:0 };
 
     if (Math.abs(tN.length - kwN.length) > 2) continue;
-
     const d = levenshtein(tN, kwN);
     if (d <= th) return { hit:true, sample:t, dist:d };
   }
@@ -615,21 +611,14 @@ function checkText() {
     html += `<div class="danger">✘ พบคำที่ใช้ไม่ได้ (ตรงคำ/alias) (${badExactU.length})</div>`;
     html += '<ul>' + badExactU.map(x => `<li><span class="danger">${escapeHTML(x.word)}</span></li>`).join('') + '</ul>';
   }
-
   if (badLooseU.length) {
     html += `<div class="danger" style="margin-top:10px">⚠️ พบคำต้องห้าม (ตรวจแบบยืดหยุ่น) (${badLooseU.length})</div>`;
-    html += '<ul>' + badLooseU.map(x =>
-      `<li><span class="danger">${escapeHTML(x.word)}</span> <span class="muted">(loose)</span></li>`
-    ).join('') + '</ul>';
+    html += '<ul>' + badLooseU.map(x => `<li><span class="danger">${escapeHTML(x.word)}</span> <span class="muted">(loose)</span></li>`).join('') + '</ul>';
   }
-
   if (badFuzzyU.length) {
     html += `<div class="danger" style="margin-top:10px">⚠️ พบคำที่ “ใกล้เคียงคำต้องห้าม” (${badFuzzyU.length})</div>`;
-    html += '<ul>' + badFuzzyU.map(x =>
-      `<li><span class="danger">${escapeHTML(x.word)}</span> <span class="muted">(ใกล้เคียง: "${escapeHTML(x._sample || '')}")</span></li>`
-    ).join('') + '</ul>';
+    html += '<ul>' + badFuzzyU.map(x => `<li><span class="danger">${escapeHTML(x.word)}</span> <span class="muted">(ใกล้เคียง: "${escapeHTML(x._sample || '')}")</span></li>`).join('') + '</ul>';
   }
-
   if (okU.length) {
     html += `<div class="ok" style="margin-top:10px">✔ พบคำที่ใช้ได้ (${okU.length})</div>`;
     html += '<ul>' + okU.map(x => `<li><span class="ok">${escapeHTML(x.word)}</span></li>`).join('') + '</ul>';
@@ -755,12 +744,8 @@ function renderKeywordLibrary() {
         const forbid = (t.forbidItems||[]).slice().sort(sortNum);
 
         html += `<div style="margin-left:12px;margin-bottom:14px"><h4>${escapeHTML(t.topic)}</h4>`;
-
         let n = 1;
-        for (const it of allow) {
-          html += `<div>${n}. <span class="ok">✔ ใช้ได้</span>: ${escapeHTML(it.keyword)}</div>`;
-          n++;
-        }
+        for (const it of allow) { html += `<div>${n}. <span class="ok">✔ ใช้ได้</span>: ${escapeHTML(it.keyword)}</div>`; n++; }
         for (const it of forbid) {
           html += `<div>${n}. <span class="danger">✘ ใช้ไม่ได้</span>: ${escapeHTML(it.keyword)}${
             it.rewrite ? ` <span class="muted small">(แนะนำ: ${escapeHTML(it.rewrite)})</span>` : ''
@@ -776,7 +761,7 @@ function renderKeywordLibrary() {
 }
 
 /***********************
- * LOAD (CSV) + Auto Aliases + Whitelist
+ * LOAD (CSV) + Auto-Alias + Whitelist
  ***********************/
 async function loadFromGoogleSheets() {
   const statusEl = document.getElementById('loadStatus');
@@ -834,7 +819,6 @@ async function loadFromGoogleSheets() {
       const manualAliases = parseAliases(aliasesRaw);
       const autoAliases = generateAutoAliases(keyword);
 
-      // รวม aliases: manual + auto แล้ว dedupe
       const aliases = Array.from(new Set([].concat(manualAliases, autoAliases).filter(Boolean)));
 
       if (isAllow) allowKeywords.push({ word: keyword, aliases });
