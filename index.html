@@ -32,7 +32,11 @@
     .hr { height:1px; background:#eef2f7; margin:12px 0; }
     a { color:#2563eb; text-decoration:none; }
     a:hover { text-decoration:underline; }
-    code { background:#111827; color:#fff; padding:2px 6px; border-radius:7px; font-size:12px; }
+
+    .tag { display:inline-block; padding:2px 8px; border-radius:999px; font-size:12px; background:#eef2f7; margin-right:6px; }
+    .tag.red { background:rgba(220,38,38,0.10); color:#991b1b; }
+    .tag.green { background:rgba(34,197,94,0.12); color:#166534; }
+    .tag.gray { background:#eef2f7; color:#111827; }
 
     /* Highlighter overlay */
     .editor-wrap { position: relative; width: 100%; margin-top:12px; }
@@ -69,6 +73,11 @@
     }
     .hl-ok { background: rgba(34, 197, 94, 0.25); border-radius: 8px; padding: 0 2px; }
     .hl-bad { background: rgba(220, 38, 38, 0.25); border-radius: 8px; padding: 0 2px; }
+
+    #rewriteResult { white-space: pre-wrap; color:#111827; }
+    #suggestions { margin-top:10px; }
+    .suggestion-box { margin-top:12px; padding:12px; border-radius:12px; background:#fff; border:1px dashed #d1d5db; }
+    .suggestion-box h4 { margin:0 0 8px 0; }
   </style>
 </head>
 
@@ -76,7 +85,7 @@
 <div class="container">
   <h1>🩺 Clinic Ad Checker</h1>
   <div class="muted">ตรวจคำโฆษณา + คู่มือ (โหลดจาก Google Sheets CSV)</div>
-  <div class="muted small">Version: v5-paren-split (thai/eng match)</div>
+  <div class="muted small">Version: v7-empty-dash + suggestions</div>
 
   <div class="box">
     <div class="statusbar">
@@ -86,9 +95,6 @@
     </div>
     <div class="small muted" style="margin-top:8px">
       แหล่งข้อมูล: <a id="srcLink" target="_blank" rel="noreferrer">Google Sheets CSV</a>
-      <div class="small muted" style="margin-top:6px">
-        แนะนำให้เปิดผ่าน <b>GitHub Pages</b> หรือ <b>VSCode Live Server</b> (อย่าเปิดแบบ <code>file://</code>)
-      </div>
     </div>
   </div>
 
@@ -107,12 +113,8 @@
   <div class="box">
     <h3>ผลการตรวจ</h3>
     <div id="result">-</div>
-    <div class="muted small" style="margin-top:8px">
-      ไฮไลท์สีเขียว = ใช้ได้, สีแดง = ใช้ไม่ได้
-      <div class="small muted" style="margin-top:4px">
-        * ระบบมี “Auto-Alias” เช่น รีจูรัน (REJURAN) → รีจูรัน / REJURAN
-      </div>
-    </div>
+    <div id="suggestions"></div>
+    <div class="muted small" style="margin-top:8px">ไฮไลท์สีเขียว = ใช้ได้, สีแดง = ใช้ไม่ได้</div>
   </div>
 
   <div class="box">
@@ -253,7 +255,7 @@ function parseAliases(raw) {
 }
 
 /***********************
- * ✅ AUTO-ALIASES: แยกวงเล็บ ไทย/อังกฤษ + ตัดท้ายพวก ซ์/ส์/ต์/ด์ ฯลฯ
+ * AUTO-ALIASES
  ***********************/
 function generateAutoAliases(word) {
   const w = normalizeText(word || '').trim();
@@ -261,60 +263,45 @@ function generateAutoAliases(word) {
 
   const out = new Set();
 
-  // A) แยกวงเล็บ: รองรับ () และ （）
-  // - alias ตัดวงเล็บออก: "รีจูรัน (REJURAN)" -> "รีจูรัน"
   const noParen = w.replace(/\s*[\(\（].*?[\)\）]\s*/g, ' ').replace(/\s+/g,' ').trim();
   if (noParen && noParen !== w) out.add(noParen);
 
-  // - alias ดึงข้อความในวงเล็บ: -> "REJURAN"
   const matches = w.matchAll(/[\(\（]\s*([^)\）]+?)\s*[\)\）]/g);
   for (const m of matches) {
     const inside = (m && m[1]) ? m[1].trim() : '';
     if (!inside) continue;
     out.add(inside);
-
-    // ถ้าในวงเล็บมีหลาย token เช่น "A/B" หรือ "A, B" ให้แตกเพิ่ม
     inside.split(/[\/,|]+/g).map(x=>x.trim()).filter(Boolean).forEach(x => out.add(x));
   }
 
-  // B) ตัดท้ายคำที่มักพิมพ์หาย (โบท็อกซ์ -> โบท็อก)
   const patterns = [/ซ์\s*$/u, /ส์\s*$/u, /ต์\s*$/u, /ด์\s*$/u, /ษ์\s*$/u, /ร์\s*$/u, /ล์\s*$/u, /น์\s*$/u, /์\s*$/u];
   for (const p of patterns) {
     if (p.test(w)) {
       const a = w.replace(p, '').trim();
-      if (a.length >= 3) out.add(a);
+      if (a.length >= 2) out.add(a);
     }
     if (p.test(noParen)) {
       const a2 = noParen.replace(p, '').trim();
-      if (a2.length >= 3) out.add(a2);
+      if (a2.length >= 2) out.add(a2);
     }
   }
 
-  // C) ภาษาอังกฤษ: lower/upper
   const addCase = (s) => {
     if (!s) return;
-    if (/[a-zA-Z]/.test(s)) {
-      out.add(s.toLowerCase());
-      out.add(s.toUpperCase());
-    }
+    if (/[a-zA-Z]/.test(s)) { out.add(s.toLowerCase()); out.add(s.toUpperCase()); }
   };
-  addCase(w);
-  addCase(noParen);
+  addCase(w); addCase(noParen);
   for (const x of Array.from(out)) addCase(x);
 
-  // D) เวอร์ชันตัดช่องว่าง (เผื่อคนพิมพ์ติด)
   out.add(w.replace(/\s+/g,''));
   out.add(noParen.replace(/\s+/g,''));
 
-  // ลบตัวเอง
   out.delete(w);
-
-  // กัน alias สั้นเกิน
   return Array.from(out).map(x=>x.trim()).filter(x => x && x.length >= 2);
 }
 
 /***********************
- * WHITELIST / NORMALIZE / FUZZY (ใช้แบบเดิม)
+ * WHITELIST / FUZZY
  ***********************/
 function normalizeThaiLite(s) {
   return String(s || '')
@@ -332,11 +319,9 @@ function levenshtein(a, b) {
   const m = a.length, n = b.length;
   if (m === 0) return n;
   if (n === 0) return m;
-
   const dp = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
   for (let i = 0; i <= m; i++) dp[i][0] = i;
   for (let j = 0; j <= n; j++) dp[0][j] = j;
-
   for (let i = 1; i <= m; i++) {
     for (let j = 1; j <= n; j++) {
       const cost = a[i - 1] === b[j - 1] ? 0 : 1;
@@ -365,7 +350,6 @@ function rebuildWhitelistTokens() {
   for (const k of forbidKeywords) {
     const w = normalizeThaiLite(k.word);
     if (w && w.length >= 3) set.add(w);
-
     if (Array.isArray(k.aliases)) {
       for (const a of k.aliases) {
         const an = normalizeThaiLite(a);
@@ -373,12 +357,10 @@ function rebuildWhitelistTokens() {
       }
     }
   }
-
   for (const t of EXTRA_WHITELIST_TOKENS) {
     const tn = normalizeThaiLite(t);
     if (tn && tn.length >= 3) set.add(tn);
   }
-
   whitelistTokens = set;
 }
 
@@ -386,7 +368,6 @@ function isWhitelistedToken(token) {
   const tN = normalizeThaiLite(token);
   if (!tN) return false;
   if (whitelistTokens.has(tN)) return true;
-
   if (tN.length < 4) return false;
   for (const w of whitelistTokens) {
     if (w.length < 4) continue;
@@ -398,10 +379,8 @@ function isWhitelistedToken(token) {
 function buildLooseThaiRegex(keyword) {
   const raw = String(keyword || '').trim();
   if (!raw) return null;
-
   const cleaned = raw.replace(/\s+/g, '').replace(/[^\u0E00-\u0E7Fa-zA-Z0-9]/g, '');
   if (!cleaned) return null;
-
   const THAI_MARKS = '[\\u0E31\\u0E34-\\u0E3A\\u0E47-\\u0E4E]*';
   const parts = [];
   for (const ch of cleaned) parts.push(`${escapeRegExp(ch)}${THAI_MARKS}`);
@@ -413,7 +392,6 @@ function extractWhitelistSubtokens(text) {
   const tN = normalizeThaiLite(text);
   const out = [];
   if (!tN) return out;
-
   for (const w of whitelistTokens) {
     if (w.length < 4) continue;
     if (tN.includes(w)) out.push(w);
@@ -433,7 +411,6 @@ function fuzzyHitKeywordWhitelisted(userText, keyword) {
 
   for (const t of allTokens) {
     if (!isWhitelistedToken(t)) continue;
-
     const tN = normalizeThaiLite(t);
     if (!tN) continue;
 
@@ -443,12 +420,11 @@ function fuzzyHitKeywordWhitelisted(userText, keyword) {
     const d = levenshtein(tN, kwN);
     if (d <= th) return { hit:true, sample:t, dist:d };
   }
-
   return { hit:false };
 }
 
 /***********************
- * HIGHLIGHTER (exact + aliases)
+ * HIGHLIGHT
  ***********************/
 function syncScroll() {
   const ta = document.getElementById('inputText');
@@ -478,7 +454,6 @@ function renderHighlightWithSpans(text, spans) {
   const original = normalizeText(text);
   if (!original) return '';
   if (!spans || !spans.length) return escapeHTML(original);
-
   const merged = mergeSpans(spans);
   let out = '';
   let cursor = 0;
@@ -496,7 +471,6 @@ function buildHighlights(text) {
   const original = normalizeText(text);
   if (!original) return '';
   const spans = [];
-
   const pushMatches = (list, type) => {
     for (const k of list) {
       const candidates = [k.word].concat(Array.isArray(k.aliases) ? k.aliases : []);
@@ -511,10 +485,8 @@ function buildHighlights(text) {
       }
     }
   };
-
   pushMatches(allowKeywords, 'ok');
   pushMatches(forbidKeywords, 'bad');
-
   return renderHighlightWithSpans(original, spans);
 }
 
@@ -522,6 +494,58 @@ function syncHighlightLive() {
   const ta = document.getElementById('inputText');
   document.getElementById('highlighter').innerHTML = buildHighlights(ta.value);
   syncScroll();
+}
+
+/***********************
+ * ✅ Suggestions helper
+ ***********************/
+function uniq(arr) {
+  const s = new Set();
+  const out = [];
+  for (const x of arr) {
+    const k = normalizeKey(x);
+    if (!k || s.has(k)) continue;
+    s.add(k); out.push(x);
+  }
+  return out;
+}
+
+function getReplacement(item) {
+  // ✅ ถ้าว่างให้เป็น "-"
+  const r = normalizeText(item.rewrite || '').trim();
+  return r ? r : '-';
+}
+
+function renderSuggestionsFromBad(badItems) {
+  const box = document.getElementById('suggestions');
+
+  const reps = uniq(
+    badItems
+      .map(it => getReplacement(it))
+      .filter(x => normalizeKey(x) && normalizeKey(x) !== '-')
+  );
+
+  if (!badItems.length) {
+    box.innerHTML = '';
+    return;
+  }
+
+  if (!reps.length) {
+    box.innerHTML = `
+      <div class="suggestion-box">
+        <h4>💡 ข้อแนะนำ / คำโฆษณาที่แนะนำ</h4>
+        <div class="muted">ไม่มีคำแนะนำในฐานข้อมูล (-)</div>
+      </div>
+    `;
+    return;
+  }
+
+  box.innerHTML = `
+    <div class="suggestion-box">
+      <h4>💡 ข้อแนะนำ / คำโฆษณาที่แนะนำ</h4>
+      <div>${reps.map(x => `<span class="tag green">${escapeHTML(x)}</span>`).join(' ')}</div>
+    </div>
+  `;
 }
 
 /***********************
@@ -533,8 +557,9 @@ function checkText() {
   const summary = document.getElementById('matchSummary');
 
   if (!allowKeywords.length && !forbidKeywords.length) {
-    resultDiv.innerHTML = '<span class="muted">ยังไม่มีฐานข้อมูลคำ (ตรวจสอบการโหลด Google Sheets)</span>';
+    resultDiv.innerHTML = '<span class="muted">ยังไม่มีฐานข้อมูลคำ</span>';
     summary.textContent = '-';
+    document.getElementById('suggestions').innerHTML = '';
     syncHighlightLive();
     return;
   }
@@ -562,16 +587,13 @@ function checkText() {
 
   for (const k of forbidKeywords) {
     if (exactSet.has(normalizeKey(k.word))) continue;
-
     const candidates = [k.word].concat(Array.isArray(k.aliases) ? k.aliases : []);
     let hitLoose = false;
-
     for (const c of candidates) {
       const loose = buildLooseThaiRegex(c);
       if (loose && loose.test(text)) { hitLoose = true; break; }
     }
-
-    if (hitLoose) foundBadLoose.push({ ...k, _sample: '(loose)', _dist: 0 });
+    if (hitLoose) foundBadLoose.push(k);
   }
 
   const looseSet = new Set(foundBadLoose.map(x => normalizeKey(x.word)));
@@ -587,37 +609,28 @@ function checkText() {
         if (hit.hit) break;
       }
     }
-
-    if (hit.hit) foundBadFuzzy.push({ ...k, _sample: hit.sample, _dist: hit.dist });
+    if (hit.hit) foundBadFuzzy.push(k);
   }
 
   const okU = dedupeByWord(foundOk);
   const badExactU = dedupeByWord(foundBadExact);
-  const badLooseU = dedupeByWord(foundBadLoose);
-  const badFuzzyU = dedupeByWord(foundBadFuzzy);
+  const badExtraU = dedupeByWord(foundBadLoose.concat(foundBadFuzzy));
+  const badAll = dedupeByWord(badExactU.concat(badExtraU));
 
-  const badTotal = badExactU.length + badLooseU.length + badFuzzyU.length;
+  const badTotal = badAll.length;
   summary.textContent = `พบ: ใช้ไม่ได้ ${badTotal} | ใช้ได้ ${okU.length}`;
 
   if (!okU.length && badTotal === 0) {
-    resultDiv.innerHTML = '<span class="warn">⚠️ ไม่พบคำในฐานข้อมูล (อาจมีคำใกล้เคียง/สะกดต่าง)</span>';
+    resultDiv.innerHTML = '<span class="warn">⚠️ ไม่พบคำในฐานข้อมูล (อาจสะกดต่าง/คำใกล้เคียง)</span>';
+    document.getElementById('suggestions').innerHTML = '';
     syncHighlightLive();
     return;
   }
 
   let html = '';
-
-  if (badExactU.length) {
-    html += `<div class="danger">✘ พบคำที่ใช้ไม่ได้ (ตรงคำ/alias) (${badExactU.length})</div>`;
-    html += '<ul>' + badExactU.map(x => `<li><span class="danger">${escapeHTML(x.word)}</span></li>`).join('') + '</ul>';
-  }
-  if (badLooseU.length) {
-    html += `<div class="danger" style="margin-top:10px">⚠️ พบคำต้องห้าม (ตรวจแบบยืดหยุ่น) (${badLooseU.length})</div>`;
-    html += '<ul>' + badLooseU.map(x => `<li><span class="danger">${escapeHTML(x.word)}</span> <span class="muted">(loose)</span></li>`).join('') + '</ul>';
-  }
-  if (badFuzzyU.length) {
-    html += `<div class="danger" style="margin-top:10px">⚠️ พบคำที่ “ใกล้เคียงคำต้องห้าม” (${badFuzzyU.length})</div>`;
-    html += '<ul>' + badFuzzyU.map(x => `<li><span class="danger">${escapeHTML(x.word)}</span> <span class="muted">(ใกล้เคียง: "${escapeHTML(x._sample || '')}")</span></li>`).join('') + '</ul>';
+  if (badAll.length) {
+    html += `<div class="danger">✘ พบคำที่ใช้ไม่ได้/น่าสงสัย (${badAll.length})</div>`;
+    html += '<ul>' + badAll.map(x => `<li><span class="danger">${escapeHTML(x.word)}</span></li>`).join('') + '</ul>';
   }
   if (okU.length) {
     html += `<div class="ok" style="margin-top:10px">✔ พบคำที่ใช้ได้ (${okU.length})</div>`;
@@ -625,17 +638,30 @@ function checkText() {
   }
 
   resultDiv.innerHTML = html;
+  renderSuggestionsFromBad(badAll);
   syncHighlightLive();
 }
 
 /***********************
- * REWRITE (Exact + Alias + Loose)
+ * REWRITE
  ***********************/
+function cleanupText(t) {
+  return String(t || '')
+    .replace(/[ \t]+\n/g, '\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .replace(/[ \t]{2,}/g, ' ')
+    .trim();
+}
+
 function rewriteText() {
   let text = normalizeText(document.getElementById('inputText').value || '');
+  if (!text.trim()) {
+    document.getElementById('rewriteResult').innerText = '-';
+    return;
+  }
 
   if (!forbidKeywords.length) {
-    document.getElementById('rewriteResult').innerText = text || '-';
+    document.getElementById('rewriteResult').innerText = cleanupText(text);
     return;
   }
 
@@ -644,8 +670,9 @@ function rewriteText() {
     .slice()
     .sort((a, b) => (b.word.length - a.word.length));
 
+  // 1) exact + alias
   for (const item of sorted) {
-    const replacement = (item.rewrite && item.rewrite.trim()) ? item.rewrite.trim() : 'ปรับถ้อยคำให้เป็นกลาง';
+    const replacement = getReplacement(item); // ✅ ว่าง = "-"
     const candidates = [item.word].concat(Array.isArray(item.aliases) ? item.aliases : []);
     for (const c of candidates) {
       const rx = buildFlexibleRegex(c);
@@ -654,8 +681,9 @@ function rewriteText() {
     }
   }
 
+  // 2) loose Thai
   for (const item of sorted) {
-    const replacement = (item.rewrite && item.rewrite.trim()) ? item.rewrite.trim() : 'ปรับถ้อยคำให้เป็นกลาง';
+    const replacement = getReplacement(item);
     const candidates = [item.word].concat(Array.isArray(item.aliases) ? item.aliases : []);
     for (const c of candidates) {
       const loose = buildLooseThaiRegex(c);
@@ -664,16 +692,28 @@ function rewriteText() {
     }
   }
 
-  text += '\n\n*อ้างอิงถ้อยคำจากฐานข้อมูลภายใน (Google Sheets) ที่ฝ่าย Marketing ดูแล';
+  text = cleanupText(text);
 
-  document.getElementById('rewriteResult').innerText = text || '-';
+  // เพิ่มข้อแนะนำท้ายข้อความแบบสั้น (ไม่รก)
+  const recommended = uniq(sorted.map(it => getReplacement(it)).filter(x => normalizeKey(x) && normalizeKey(x) !== '-'));
+  if (recommended.length) {
+    text += `\n\nคำแนะนำ/คำโฆษณาที่แนะนำ: ${recommended.join(', ')}`;
+  } else {
+    text += `\n\nคำแนะนำ/คำโฆษณาที่แนะนำ: -`;
+  }
+
+  text += '\n\n*อ้างอิงถ้อยคำจากฐานข้อมูลภายใน (Google Sheets) ที่ฝ่าย Marketing ดูแล';
+  text += '\n*ผลลัพธ์ขึ้นอยู่กับแต่ละบุคคล และต้องได้รับการประเมินโดยแพทย์';
+
+  document.getElementById('rewriteResult').innerText = text;
 }
 
 function clearAll() {
   document.getElementById('inputText').value = '';
   document.getElementById('result').innerHTML = '-';
-  document.getElementById('rewriteResult').innerHTML = '<span class="muted">-</span>';
+  document.getElementById('rewriteResult').innerText = '-';
   document.getElementById('matchSummary').textContent = '-';
+  document.getElementById('suggestions').innerHTML = '';
   syncHighlightLive();
 }
 
@@ -683,7 +723,6 @@ function clearAll() {
 function rebuildCategoryFilter() {
   const select = document.getElementById('categoryFilter');
   select.innerHTML = '<option value="all">ทั้งหมด</option>';
-
   Object.keys(keywordLibraryData)
     .sort((a,b) => a.localeCompare(b,'th'))
     .forEach(cat => {
@@ -705,7 +744,6 @@ function rebuildTopicFilter() {
   } else {
     Object.keys(keywordLibraryData[cat] || {}).forEach(t => set.add(t));
   }
-
   Array.from(set).sort((a,b)=>a.localeCompare(b,'th')).forEach(t => {
     const opt = document.createElement('option');
     opt.value = t;
@@ -746,9 +784,8 @@ function renderKeywordLibrary() {
         let n = 1;
         for (const it of allow) { html += `<div>${n}. <span class="ok">✔ ใช้ได้</span>: ${escapeHTML(it.keyword)}</div>`; n++; }
         for (const it of forbid) {
-          html += `<div>${n}. <span class="danger">✘ ใช้ไม่ได้</span>: ${escapeHTML(it.keyword)}${
-            it.rewrite ? ` <span class="muted small">(แนะนำ: ${escapeHTML(it.rewrite)})</span>` : ''
-          }</div>`;
+          const rep = normalizeText(it.rewrite || '').trim() || '-';
+          html += `<div>${n}. <span class="danger">✘ ใช้ไม่ได้</span>: ${escapeHTML(it.keyword)} <span class="muted small">(แนะนำ: ${escapeHTML(rep)})</span></div>`;
           n++;
         }
         html += `</div>`;
@@ -760,7 +797,7 @@ function renderKeywordLibrary() {
 }
 
 /***********************
- * LOAD (CSV) + Auto-Alias + Whitelist
+ * LOAD (CSV)
  ***********************/
 async function loadFromGoogleSheets() {
   const statusEl = document.getElementById('loadStatus');
@@ -782,7 +819,7 @@ async function loadFromGoogleSheets() {
     const idxNo       = findColIndex(headers, ['No.', 'No', 'ลำดับ', '#']);
     const idxKeyword  = findColIndex(headers, ['Keyword', 'คำที่ต้องการตรวจ', 'คำ']);
     const idxStatus   = findColIndex(headers, ['Status', 'สถานะ']);
-    const idxRewrite  = findColIndex(headers, ['คำที่สามารถใช้โฆษณาได้', 'Rewrite', 'คำแนะนำ', 'ปรับเป็น']);
+    const idxRewrite  = findColIndex(headers, ['คำที่สามารถใช้โฆษณาได้', 'Rewrite', 'คำแนะนำ', 'ปรับเป็น', 'คำแทน']);
     const idxAliases  = findColIndex(headers, ['Aliases', 'Alias', 'คำพ้อง', 'คำเรียกอื่น', 'คำสะกดอื่น']);
 
     allowKeywords = [];
@@ -799,7 +836,7 @@ async function loadFromGoogleSheets() {
       const noRaw       = cells[idxNo]       ?? cells[2] ?? '';
       const keywordRaw  = cells[idxKeyword]  ?? cells[3] ?? '';
       const statusRaw   = cells[idxStatus]   ?? cells[4] ?? '';
-      const rewriteRaw  = cells[idxRewrite]  ?? cells[5] ?? '';
+      const rewriteRaw  = (idxRewrite >= 0) ? (cells[idxRewrite] ?? '') : (cells[5] ?? '');
       const aliasesRaw  = (idxAliases >= 0) ? (cells[idxAliases] ?? '') : '';
 
       const keyword = normalizeText(keywordRaw).trim();
@@ -813,12 +850,12 @@ async function loadFromGoogleSheets() {
       const category = normalizeKey(categoryRaw) || '(ไม่ระบุหมวดหมู่)';
       const topic = normalizeKey(topicRaw) || '(ไม่ระบุ Topic)';
       const parsedNo = Number.isFinite(Number(noRaw)) ? Number(noRaw) : NaN;
-      const rewrite = normalizeText(rewriteRaw).trim();
 
       const manualAliases = parseAliases(aliasesRaw);
       const autoAliases = generateAutoAliases(keyword);
-
       const aliases = Array.from(new Set([].concat(manualAliases, autoAliases).filter(Boolean)));
+
+      const rewrite = normalizeText(rewriteRaw).trim(); // อาจว่าง
 
       if (isAllow) allowKeywords.push({ word: keyword, aliases });
       if (isForbid) forbidKeywords.push({ word: keyword, rewrite, aliases });
@@ -833,7 +870,6 @@ async function loadFromGoogleSheets() {
 
     allowKeywords = dedupeByWord(allowKeywords);
     forbidKeywords = dedupeByWord(forbidKeywords);
-
     rebuildWhitelistTokens();
 
     document.getElementById('keywordCount').textContent =
@@ -849,9 +885,7 @@ async function loadFromGoogleSheets() {
     console.error(e);
     setPill(statusEl, 'bad', 'โหลดไม่สำเร็จ');
     document.getElementById('keywordLibrary').innerHTML =
-      `<div class="danger">โหลดข้อมูลจาก Google Sheets ไม่สำเร็จ</div>
-       <div class="muted small" style="margin-top:6px">
-       </div>`;
+      `<div class="danger">โหลดข้อมูลจาก Google Sheets ไม่สำเร็จ</div>`;
   }
 }
 
