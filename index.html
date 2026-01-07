@@ -665,7 +665,6 @@ function rewriteText() {
   }
 
   text += '\n\n*อ้างอิงถ้อยคำจากฐานข้อมูลภายใน (Google Sheets) ที่ฝ่าย Marketing ดูแล';
-  text += '\n*ผลลัพธ์ขึ้นอยู่กับแต่ละบุคคล และต้องได้รับการประเมินโดยแพทย์';
 
   document.getElementById('rewriteResult').innerText = text || '-';
 }
@@ -852,7 +851,6 @@ async function loadFromGoogleSheets() {
     document.getElementById('keywordLibrary').innerHTML =
       `<div class="danger">โหลดข้อมูลจาก Google Sheets ไม่สำเร็จ</div>
        <div class="muted small" style="margin-top:6px">
-         เปิดผ่าน GitHub Pages / Live Server เท่านั้น (อย่าเปิดแบบ <code>file://</code>)
        </div>`;
   }
 }
