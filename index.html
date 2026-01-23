@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>CHECK SABUY | ตรวจคำโฆษณา คลินิก</title>
 
+  <!-- Google Font: Prompt (ฟรี) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -28,22 +29,21 @@
       --shadow2: 0 6px 18px rgba(2,6,23,.08);
       --radius: 18px;
 
-      /* ✅ ชื่อไฟล์รูป background (วางในโฟลเดอร์เดียวกับไฟล์นี้) */
+      /* ✅ เพิ่ม: background image (วางไฟล์ชื่อ check-sabuy-bg.png ไว้โฟลเดอร์เดียวกับ .html) */
       --bgimg: url('check-sabuy-bg.png');
     }
 
     *{ box-sizing:border-box; }
 
-    /* ✅ Background ทั้งเว็บ (รูป + overlay) */
+    /* ✅ เพิ่มรูปเป็น background (แก้เฉพาะส่วนนี้) */
     body{
       margin:0;
       font-family: "Prompt", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
       color: var(--ink);
 
-      /* รูปอยู่ชั้นล่างสุด / overlay อยู่ชั้นบน เพื่อให้อ่านง่าย */
       background:
-        radial-gradient(900px 420px at 12% 10%, rgba(37,99,235,.20), transparent 55%),
-        radial-gradient(900px 500px at 85% 15%, rgba(16,185,129,.16), transparent 55%),
+        radial-gradient(900px 420px at 12% 10%, rgba(37,99,235,.22), transparent 55%),
+        radial-gradient(900px 500px at 85% 15%, rgba(16,185,129,.18), transparent 55%),
         radial-gradient(850px 520px at 50% 98%, rgba(245,158,11,.10), transparent 55%),
         linear-gradient(180deg, rgba(238,242,255,.92) 0%, rgba(248,250,252,.92) 55%, rgba(255,255,255,.95) 100%),
         var(--bgimg);
@@ -51,12 +51,15 @@
       background-size:
         auto, auto, auto, auto,
         cover;
+
       background-position:
         center, center, center, center,
         center;
+
       background-repeat:
         no-repeat, no-repeat, no-repeat, no-repeat,
         no-repeat;
+
       background-attachment:
         scroll, scroll, scroll, scroll,
         fixed;
@@ -64,18 +67,13 @@
       min-height: 100vh;
     }
 
-    /* Admin-only */
-    .admin-only{ display:none !important; }
-    body.is-admin .admin-only{ display:inline-flex !important; }
-    body.is-admin .admin-only.block{ display:block !important; }
-
     /* Top header bar */
     .topbar{
       position: sticky;
       top:0;
       z-index: 10;
       backdrop-filter: blur(10px);
-      background: rgba(255,255,255,.75);
+      background: rgba(255,255,255,.72);
       border-bottom: 1px solid rgba(226,232,240,.65);
     }
     .topbar-inner{
@@ -134,14 +132,16 @@
       padding: 8px 12px;
       border-radius: 999px;
       border: 1px solid var(--border);
-      background: rgba(255,255,255,.80);
+      background: rgba(255,255,255,.75);
       box-shadow: 0 6px 14px rgba(2,6,23,.05);
       font-size: 12px;
       font-weight: 600;
       color: var(--ink);
       white-space: nowrap;
     }
-    .dot{ width:8px;height:8px;border-radius:999px;background:#94a3b8; }
+    .dot{
+      width:8px;height:8px;border-radius:999px;background:#94a3b8;
+    }
     .dot.ok{ background: var(--ok); }
     .dot.bad{ background: var(--bad); }
     .dot.neutral{ background:#94a3b8; }
@@ -152,6 +152,7 @@
       font-weight:700;
     }
 
+    /* Layout */
     .wrap{
       max-width: 1160px;
       margin: 0 auto;
@@ -170,12 +171,11 @@
     }
 
     .card{
-      background: rgba(255,255,255,.92);
-      border: 1px solid rgba(226,232,240,.85);
+      background: var(--card);
+      border: 1px solid rgba(226,232,240,.8);
       border-radius: var(--radius);
       box-shadow: var(--shadow2);
       overflow:hidden;
-      backdrop-filter: blur(4px);
     }
     .card-header{
       padding: 16px 18px;
@@ -234,9 +234,10 @@
       outline: none;
     }
 
+    /* ไฮไลต์ 3 สถานะ */
     .hl-ok  { background: rgba(34, 197, 94, 0.25); border-radius: 8px; padding: 0 2px; }
     .hl-bad { background: rgba(220, 38, 38, 0.25); border-radius: 8px; padding: 0 2px; }
-    .hl-sus { background: rgba(245, 158, 11, 0.25); border-radius: 8px; padding: 0 2px; }
+    .hl-sus { background: rgba(245, 158, 11, 0.25); border-radius: 8px; padding: 0 2px; } /* น่าสงสัย */
 
     /* Buttons */
     .btns{ display:flex; gap:10px; flex-wrap:wrap; margin-top: 12px; }
@@ -311,7 +312,35 @@
       font-size: 13px;
       letter-spacing: .1px;
     }
+    .s-group{ margin-top: 10px; }
+    .s-title{
+      display:flex; align-items:center; gap:8px;
+      font-size: 12px; font-weight: 800;
+      margin-bottom: 6px;
+    }
+    .tag{
+      display:inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      margin: 4px 6px 0 0;
+      border: 1px solid rgba(148,163,184,.35);
+      background: rgba(148,163,184,.10);
+      color:#0f172a;
+    }
+    .tag.ok{
+      border-color: rgba(34,197,94,.18);
+      background: rgba(34,197,94,.10);
+      color:#166534;
+    }
+    .tag.bad{
+      border-color: rgba(220,38,38,.18);
+      background: rgba(220,38,38,.10);
+      color:#991b1b;
+    }
 
+    /* Guide filters */
     .filters{
       display:flex;
       gap: 10px;
@@ -349,11 +378,20 @@
       border: 1px solid rgba(226,232,240,.85);
       border-radius: 16px;
       padding: 12px 14px;
-      background: rgba(255,255,255,.92);
+      background: #fff;
       margin-bottom: 12px;
       box-shadow: 0 10px 22px rgba(2,6,23,.04);
-      backdrop-filter: blur(4px);
     }
+    .topic-block h4{ margin: 0 0 8px 0; font-size: 14px; }
+
+    .topic-title{
+      margin-top:10px;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .topic-title b{ font-size: 13px; }
 
     .line{
       display:flex; gap:10px; align-items:flex-start;
@@ -382,7 +420,7 @@
       padding: 14px 16px;
       border-radius: 16px;
       border: 1px solid rgba(226,232,240,.9);
-      background: rgba(255,255,255,.75);
+      background: rgba(255,255,255,.7);
       color: var(--muted);
       font-size: 12px;
       display:flex;
@@ -390,7 +428,6 @@
       flex-wrap:wrap;
       align-items:center;
       justify-content:space-between;
-      backdrop-filter: blur(4px);
     }
     .footer b{ color: var(--ink); }
   </style>
@@ -413,26 +450,22 @@
       </div>
 
       <div class="top-actions">
-        <div class="pill admin-only"><span class="dot neutral" id="dotStatus"></span><span id="loadStatus">กำลังโหลดฐานข้อมูล…</span></div>
-        <div class="pill admin-only" id="keywordCount">ใช้ได้: 0 | ใช้ไม่ได้: 0</div>
-        <div class="pill admin-only">แหล่งข้อมูล: <a id="srcLink" target="_blank" rel="noreferrer">Google Sheets CSV</a></div>
+        <div class="pill"><span class="dot neutral" id="dotStatus"></span><span id="loadStatus">กำลังโหลดฐานข้อมูล…</span></div>
+        <div class="pill" id="keywordCount">ใช้ได้: 0 | ใช้ไม่ได้: 0</div>
         <div class="pill" id="matchSummary">พบ: -</div>
+        <div class="pill">แหล่งข้อมูล: <a id="srcLink" target="_blank" rel="noreferrer">Google Sheets CSV</a></div>
       </div>
     </div>
   </div>
 
   <div class="wrap">
     <div class="hero">
+      <!-- Left: Checker -->
       <div class="card">
         <div class="card-header">
           <div>
             <h2>🧾 ตรวจข้อความโฆษณา</h2>
-            <p>
-              ไฮไลท์อัตโนมัติ:
-              <b style="color:var(--ok)">เขียว</b> = ใช้ได้,
-              <b style="color:var(--bad)">แดง</b> = ใช้ไม่ได้,
-              <b style="color:var(--warn)">ส้ม</b> = น่าสงสัย
-            </p>
+            <p>ไฮไลท์อัตโนมัติ: <b style="color:var(--ok)">เขียว</b> = ใช้ได้, <b style="color:var(--bad)">แดง</b> = ใช้ไม่ได้, <b style="color:var(--warn)">ส้ม</b> = น่าสงสัย</p>
           </div>
           <div class="pill" style="margin-left:auto">
             <span class="dot neutral"></span> โหมด: ตรวจคำ
@@ -472,6 +505,7 @@
         </div>
       </div>
 
+      <!-- Right: Result -->
       <div class="card">
         <div class="card-header">
           <div>
@@ -497,6 +531,7 @@
       </div>
     </div>
 
+    <!-- Guide -->
     <div class="card" style="margin-top:14px">
       <div class="card-header">
         <div>
@@ -528,18 +563,816 @@
   </div>
 
 <script>
-(function initAdminMode(){
-  const isAdmin = new URLSearchParams(location.search).get('admin') === '1';
-  if (isAdmin) document.body.classList.add('is-admin');
-})();
-
+/***********************
+ * CSV URL (Publish to web)
+ ***********************/
 const CSV_URL =
   'https://docs.google.com/spreadsheets/d/e/2PACX-1vTYcW7K_bjXlX3ns7Ok_4mbb_45ogxQHwKwyw-2Im9v1iUlS96TPICBy_5t5n973tP3YB1qEB9mQTqc/pub?output=csv';
 document.getElementById('srcLink').href = CSV_URL;
 
-/* ====== โค้ด JS ส่วนอื่นของคุณคงเดิมทั้งหมด ======
-   (จงวาง JS ที่คุณใช้อยู่ต่อจากนี้ได้เลย หรือถ้าคุณมีไฟล์เต็มอยู่แล้ว ให้ใช้ไฟล์เต็มนั้น)
-*/
+/***********************
+ * OPTIONAL whitelist tokens (เพิ่มเองได้)
+ ***********************/
+const EXTRA_WHITELIST_TOKENS = [
+  'botox','filler','hifu','meso','ulthera','thermage','rejuran',
+  'โบท็อก','โบทอก','ฟิลเลอร์','ไฮฟู','เมโส','ร้อยไหม','เลเซอร์','รีจูรัน'
+];
+
+/***********************
+ * STATE
+ ***********************/
+const keywordLibraryData = {};
+let allowKeywords = [];   // { word, aliases?:[] , rewrite?:'' }
+let forbidKeywords = [];  // { word, rewrite, aliases?:[] }
+let whitelistTokens = new Set();
+let lastSuspectHighlightTargets = []; // [{word, aliases?:[]}...]
+
+/***********************
+ * UTILS
+ ***********************/
+function normalizeText(v) { return String(v ?? '').replace(/\r\n/g, '\n'); }
+function normalizeKey(v) { return normalizeText(v).trim().replace(/\s+/g, ' '); }
+
+function escapeHTML(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+}
+function escapeRegExp(s) { return String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+
+/* Flexible regex: รองรับเว้นวรรค/ขีด/สัญลักษณ์ */
+function buildFlexibleRegex(keyword) {
+  const raw = normalizeText(keyword).trim();
+  if (!raw) return null;
+  const tokens = raw.match(/[\u0E00-\u0E7Fa-zA-Z0-9]+/g);
+  if (!tokens || !tokens.length) return null;
+  const SEP = '[\\s\\-–—_/\\\\|.,;:!?()\\[\\]{}"“”\\\'‘’]*';
+  const pattern = tokens.map(t => escapeRegExp(t)).join(SEP);
+  return new RegExp(pattern, 'gi');
+}
+
+function dedupeByWord(list) {
+  const seen = new Set();
+  return list.filter(x => {
+    const k = normalizeKey(x.word);
+    if (!k || seen.has(k)) return false;
+    seen.add(k); return true;
+  });
+}
+
+function setLoadStatus(type, text){
+  const el = document.getElementById('loadStatus');
+  const dot = document.getElementById('dotStatus');
+  el.textContent = text;
+  dot.className = 'dot ' + (type || 'neutral');
+}
+
+/***********************
+ * CSV PARSER
+ ***********************/
+function parseCSV(text) {
+  const s = String(text ?? '').replace(/^\uFEFF/, '');
+  const rows = [];
+  let row = [];
+  let field = '';
+  let i = 0;
+  let inQuotes = false;
+
+  while (i < s.length) {
+    const c = s[i];
+    if (inQuotes) {
+      if (c === '"') {
+        if (s[i + 1] === '"') { field += '"'; i += 2; continue; }
+        inQuotes = false; i++; continue;
+      }
+      field += c; i++; continue;
+    } else {
+      if (c === '"') { inQuotes = true; i++; continue; }
+      if (c === ',') { row.push(field); field = ''; i++; continue; }
+      if (c === '\n') { row.push(field); rows.push(row); row = []; field = ''; i++; continue; }
+      if (c === '\r') { i++; continue; }
+      field += c; i++; continue;
+    }
+  }
+  row.push(field);
+  rows.push(row);
+  return rows;
+}
+
+function findColIndex(headers, candidates) {
+  const h = headers.map(x => normalizeKey(x));
+  const cands = candidates.map(x => normalizeKey(x)).filter(Boolean);
+
+  for (const c of cands) {
+    const idx = h.indexOf(c);
+    if (idx >= 0) return idx;
+  }
+  for (let i = 0; i < h.length; i++) {
+    for (const c of cands) {
+      if (!c) continue;
+      if (h[i].includes(c) || c.includes(h[i])) return i;
+    }
+  }
+  return -1;
+}
+
+function parseAliases(raw) {
+  const s = normalizeText(raw || '').trim();
+  if (!s) return [];
+  return s.split(/[\|\n,]+/g).map(x => x.trim()).filter(Boolean);
+}
+
+/***********************
+ * AUTO-ALIASES
+ ***********************/
+function generateAutoAliases(word) {
+  const w = normalizeText(word || '').trim();
+  if (!w) return [];
+
+  const out = new Set();
+
+  const noParen = w.replace(/\s*[\(\（].*?[\)\）]\s*/g, ' ').replace(/\s+/g,' ').trim();
+  if (noParen && noParen !== w) out.add(noParen);
+
+  const matches = w.matchAll(/[\(\（]\s*([^)\）]+?)\s*[\)\）]/g);
+  for (const m of matches) {
+    const inside = (m && m[1]) ? m[1].trim() : '';
+    if (!inside) continue;
+    out.add(inside);
+    inside.split(/[\/,|]+/g).map(x=>x.trim()).filter(Boolean).forEach(x => out.add(x));
+  }
+
+  const patterns = [/ซ์\s*$/u, /ส์\s*$/u, /ต์\s*$/u, /ด์\s*$/u, /ษ์\s*$/u, /ร์\s*$/u, /ล์\s*$/u, /น์\s*$/u, /์\s*$/u];
+  for (const p of patterns) {
+    if (p.test(w)) {
+      const a = w.replace(p, '').trim();
+      if (a.length >= 2) out.add(a);
+    }
+    if (p.test(noParen)) {
+      const a2 = noParen.replace(p, '').trim();
+      if (a2.length >= 2) out.add(a2);
+    }
+  }
+
+  const addCase = (s) => {
+    if (!s) return;
+    if (/[a-zA-Z]/.test(s)) { out.add(s.toLowerCase()); out.add(s.toUpperCase()); }
+  };
+  addCase(w); addCase(noParen);
+  for (const x of Array.from(out)) addCase(x);
+
+  out.add(w.replace(/\s+/g,''));
+  out.add(noParen.replace(/\s+/g,''));
+
+  out.delete(w);
+  return Array.from(out).map(x=>x.trim()).filter(x => x && x.length >= 2);
+}
+
+/***********************
+ * SMART ALIASES (คำยาว)
+ ***********************/
+function extractAcronyms(text) {
+  const s = String(text || '');
+  const hits = s.match(/\b[A-Z][A-Z0-9]{1,10}\b/g) || [];
+  return hits.map(x => x.trim()).filter(Boolean);
+}
+function extractPrefixPhrases(text) {
+  const tokens = (String(text || '').match(/[\u0E00-\u0E7Fa-zA-Z0-9]+/g) || [])
+    .map(t => t.trim())
+    .filter(Boolean);
+  const out = [];
+  if (tokens.length >= 2) out.push(tokens.slice(0, 2).join(' '));
+  if (tokens.length >= 3) out.push(tokens.slice(0, 3).join(' '));
+  return out;
+}
+function generateSmartAliases(keyword) {
+  const w = normalizeText(keyword || '').trim();
+  if (!w) return [];
+  const out = new Set();
+  extractAcronyms(w).forEach(a => out.add(a));
+  extractPrefixPhrases(w).forEach(p => out.add(p));
+  const paren = [...w.matchAll(/[\(\（]\s*([^)\）]+?)\s*[\)\）]/g)].map(m => (m[1] || '').trim());
+  for (const inside of paren) extractAcronyms(inside).forEach(a => out.add(a));
+  return [...out].filter(x => x && x.length >= 3);
+}
+
+/***********************
+ * WHITELIST / FUZZY
+ ***********************/
+function normalizeThaiLite(s) {
+  return String(s || '')
+    .toLowerCase()
+    .replace(/\s+/g, '')
+    .replace(/[^\u0E00-\u0E7Fa-z0-9]/g,'')
+    .replace(/[่้๊๋]/g, '')
+    .replace(/[์]/g, '')
+    .replace(/ๆ/g, '')
+    .trim();
+}
+
+function levenshtein(a, b) {
+  a = a || ''; b = b || '';
+  const m = a.length, n = b.length;
+  if (m === 0) return n;
+  if (n === 0) return m;
+  const dp = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
+  for (let i = 0; i <= m; i++) dp[i][0] = i;
+  for (let j = 0; j <= n; j++) dp[0][j] = j;
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      dp[i][j] = Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1, dp[i - 1][j - 1] + cost);
+    }
+  }
+  return dp[m][n];
+}
+
+function tokenizeUserText(raw) {
+  return String(raw || '')
+    .split(/[\s,.;:!?()\[\]{}"“”'‘’\-_/\\|]+/g)
+    .map(x => x.trim())
+    .filter(Boolean);
+}
+
+function fuzzyThreshold(len) {
+  if (len <= 4) return 0;
+  if (len <= 7) return 1;
+  return 2;
+}
+
+function rebuildWhitelistTokens() {
+  const set = new Set();
+  for (const k of forbidKeywords) {
+    const w = normalizeThaiLite(k.word);
+    if (w && w.length >= 3) set.add(w);
+    if (Array.isArray(k.aliases)) {
+      for (const a of k.aliases) {
+        const an = normalizeThaiLite(a);
+        if (an && an.length >= 3) set.add(an);
+      }
+    }
+  }
+  for (const t of EXTRA_WHITELIST_TOKENS) {
+    const tn = normalizeThaiLite(t);
+    if (tn && tn.length >= 3) set.add(tn);
+  }
+  whitelistTokens = set;
+}
+
+function isWhitelistedToken(token) {
+  const tN = normalizeThaiLite(token);
+  if (!tN) return false;
+  if (whitelistTokens.has(tN)) return true;
+  if (tN.length < 4) return false;
+  for (const w of whitelistTokens) {
+    if (w.length < 4) continue;
+    if (tN.includes(w) || w.includes(tN)) return true;
+  }
+  return false;
+}
+
+function extractWhitelistSubtokens(text) {
+  const tN = normalizeThaiLite(text);
+  const out = [];
+  if (!tN) return out;
+  for (const w of whitelistTokens) {
+    if (w.length < 4) continue;
+    if (tN.includes(w)) out.push(w);
+  }
+  return out;
+}
+
+function fuzzyHitKeywordWhitelisted(userText, keyword) {
+  const kwN = normalizeThaiLite(keyword);
+  if (!kwN || kwN.length < 3) return { hit:false };
+
+  const tokens = tokenizeUserText(userText);
+  const extra = extractWhitelistSubtokens(userText);
+  const allTokens = tokens.concat(extra);
+
+  const th = fuzzyThreshold(kwN.length);
+
+  for (const t of allTokens) {
+    if (!isWhitelistedToken(t)) continue;
+    const tN = normalizeThaiLite(t);
+    if (!tN) continue;
+
+    if (tN.includes(kwN) || kwN.includes(tN)) return { hit:true, sample:t, dist:0 };
+
+    if (Math.abs(tN.length - kwN.length) > 2) continue;
+    const d = levenshtein(tN, kwN);
+    if (d <= th) return { hit:true, sample:t, dist:d };
+  }
+  return { hit:false };
+}
+
+/***********************
+ * HIGHLIGHT
+ ***********************/
+function syncScroll() {
+  const ta = document.getElementById('inputText');
+  const hl = document.getElementById('highlighter');
+  hl.scrollTop = ta.scrollTop;
+  hl.scrollLeft = ta.scrollLeft;
+}
+
+function typePriority(t){
+  if (t === 'bad') return 3;
+  if (t === 'sus') return 2;
+  return 1; // ok
+}
+
+function mergeSpans(spans) {
+  if (!spans.length) return [];
+  spans.sort((a,b) =>
+    a.start - b.start ||
+    typePriority(b.type) - typePriority(a.type) ||
+    (b.end-b.start)-(a.end-a.start)
+  );
+
+  const merged = [];
+  for (const s of spans) {
+    if (!merged.length) { merged.push({...s}); continue; }
+    const last = merged[merged.length-1];
+
+    if (s.start >= last.end) { merged.push({...s}); continue; }
+
+    if (typePriority(s.type) > typePriority(last.type)) {
+      if (s.start > last.start) {
+        const left = { ...last, end: s.start };
+        merged[merged.length-1] = left;
+        merged.push({ ...s, start: s.start, end: Math.max(s.end, last.end) });
+      } else {
+        merged[merged.length-1] = { ...s, start: last.start, end: Math.max(s.end, last.end) };
+      }
+    } else {
+      last.end = Math.max(last.end, s.end);
+    }
+  }
+  return merged;
+}
+
+function renderHighlightWithSpans(text, spans) {
+  const original = normalizeText(text);
+  if (!original) return '';
+  if (!spans || !spans.length) return escapeHTML(original);
+
+  const merged = mergeSpans(spans);
+  let out = '';
+  let cursor = 0;
+
+  for (const s of merged) {
+    if (s.start > cursor) out += escapeHTML(original.slice(cursor, s.start));
+    const chunk = escapeHTML(original.slice(s.start, s.end));
+
+    const cls =
+      s.type === 'bad' ? 'hl-bad' :
+      s.type === 'sus' ? 'hl-sus' :
+      'hl-ok';
+
+    out += `<span class="${cls}">${chunk}</span>`;
+    cursor = s.end;
+  }
+  if (cursor < original.length) out += escapeHTML(original.slice(cursor));
+  return out;
+}
+
+function buildHighlights(text) {
+  const original = normalizeText(text);
+  if (!original) return '';
+  const spans = [];
+
+  const pushMatches = (list, type) => {
+    for (const k of list) {
+      const candidates = [k.word].concat(Array.isArray(k.aliases) ? k.aliases : []);
+      for (const c of candidates) {
+        const rx = buildFlexibleRegex(c);
+        if (!rx) continue;
+        let m;
+        while ((m = rx.exec(original)) !== null) {
+          if (!m[0]) { rx.lastIndex++; continue; }
+          spans.push({ start: m.index, end: m.index + m[0].length, type });
+        }
+      }
+    }
+  };
+
+  pushMatches(allowKeywords, 'ok');
+  pushMatches(lastSuspectHighlightTargets, 'sus');
+  pushMatches(forbidKeywords, 'bad');
+
+  return renderHighlightWithSpans(original, spans);
+}
+
+function syncHighlightLive() {
+  const ta = document.getElementById('inputText');
+  document.getElementById('highlighter').innerHTML = buildHighlights(ta.value);
+  syncScroll();
+}
+
+/***********************
+ * Suggestions
+ ***********************/
+function uniq(arr) {
+  const s = new Set();
+  const out = [];
+  for (const x of arr) {
+    const k = normalizeKey(x);
+    if (!k || s.has(k)) continue;
+    s.add(k); out.push(x);
+  }
+  return out;
+}
+function cleanSuggestion(v){
+  const r = normalizeText(v || '').trim();
+  if (!r) return '';
+  if (normalizeKey(r) === '-') return '';
+  return r;
+}
+function renderSuggestions(badItems, okItems) {
+  const box = document.getElementById('suggestions');
+
+  const okRecs = uniq((okItems||[]).map(it => cleanSuggestion(it.rewrite)).filter(Boolean));
+  const badRecs = uniq((badItems||[]).map(it => cleanSuggestion(it.rewrite)).filter(Boolean));
+
+  if ((!okItems || !okItems.length) && (!badItems || !badItems.length)) {
+    box.innerHTML = '';
+    return;
+  }
+
+  if (!okRecs.length && !badRecs.length) {
+    box.innerHTML = `
+      <div class="suggestion-box">
+        <h4>💡 ข้อแนะนำ / คำโฆษณาที่แนะนำ</h4>
+        <div class="muted">ไม่มีคำแนะนำในฐานข้อมูล (-)</div>
+      </div>
+    `;
+    return;
+  }
+
+  let html = `<div class="suggestion-box"><h4>💡 ข้อแนะนำ / คำโฆษณาที่แนะนำ</h4>`;
+
+  if (okRecs.length) {
+    html += `
+      <div class="s-group">
+        <div class="s-title"><span class="dot ok"></span> สำหรับคำที่ใช้ได้</div>
+        <div>${okRecs.map(x => `<span class="tag ok">${escapeHTML(x)}</span>`).join(' ')}</div>
+      </div>
+    `;
+  }
+
+  if (badRecs.length) {
+    html += `
+      <div class="s-group">
+        <div class="s-title"><span class="dot bad"></span> สำหรับคำที่ใช้ไม่ได้/น่าสงสัย</div>
+        <div>${badRecs.map(x => `<span class="tag bad">${escapeHTML(x)}</span>`).join(' ')}</div>
+      </div>
+    `;
+  }
+
+  html += `</div>`;
+  box.innerHTML = html;
+}
+
+/***********************
+ * CHECK
+ ***********************/
+function setBadOkSus(bad, sus, ok){
+  document.getElementById('badgeBad').textContent = `✘ ใช้ไม่ได้: ${bad}`;
+  document.getElementById('badgeSus').textContent = `⚠️ น่าสงสัย: ${sus}`;
+  document.getElementById('badgeOk').textContent  = `✔ ใช้ได้: ${ok}`;
+}
+
+function normalizeForContains(s){
+  return String(s || '')
+    .toLowerCase()
+    .replace(/\s+/g,'')
+    .replace(/[^\u0E00-\u0E7Fa-z0-9]/g,'')
+    .replace(/[่้๊๋์]/g,'')
+    .replace(/ๆ/g,'')
+    .trim();
+}
+function looseContains(text, keyword){
+  const t = normalizeForContains(text);
+  const k = normalizeForContains(keyword);
+  if (!t || !k) return false;
+  if (k.length < 4) return false;
+  return t.includes(k);
+}
+
+function checkText() {
+  const text = normalizeText(document.getElementById('inputText').value || '');
+  const resultDiv = document.getElementById('result');
+  const summary = document.getElementById('matchSummary');
+  document.getElementById('suggestions').innerHTML = '';
+  lastSuspectHighlightTargets = [];
+
+  if (!allowKeywords.length && !forbidKeywords.length) {
+    resultDiv.innerHTML = '<span class="muted">ยังไม่มีฐานข้อมูลคำ</span>';
+    summary.textContent = 'พบ: -';
+    setBadOkSus(0,0,0);
+    syncHighlightLive();
+    return;
+  }
+
+  const foundOk = [];
+  const foundBadExact = [];
+  const foundBadLoose = [];
+  const foundBadFuzzy = [];
+
+  const scanExact = (list, sink) => {
+    for (const k of list) {
+      const candidates = [k.word].concat(Array.isArray(k.aliases) ? k.aliases : []);
+      for (const c of candidates) {
+        const rx = buildFlexibleRegex(c);
+        if (!rx) continue;
+        if (rx.test(text)) { sink.push(k); break; }
+      }
+    }
+  };
+
+  scanExact(forbidKeywords, foundBadExact);
+  scanExact(allowKeywords, foundOk);
+
+  const exactSet = new Set(foundBadExact.map(x => normalizeKey(x.word)));
+
+  for (const k of forbidKeywords) {
+    if (exactSet.has(normalizeKey(k.word))) continue;
+    const candidates = [k.word].concat(Array.isArray(k.aliases) ? k.aliases : []);
+    let hitLoose = false;
+    for (const c of candidates) {
+      if (looseContains(text, c)) { hitLoose = true; break; }
+    }
+    if (hitLoose) {
+      foundBadLoose.push(k);
+      lastSuspectHighlightTargets.push(k);
+    }
+  }
+
+  const looseSet = new Set(foundBadLoose.map(x => normalizeKey(x.word)));
+
+  for (const k of forbidKeywords) {
+    const key = normalizeKey(k.word);
+    if (exactSet.has(key) || looseSet.has(key)) continue;
+
+    let hit = fuzzyHitKeywordWhitelisted(text, k.word);
+    if (!hit.hit && Array.isArray(k.aliases)) {
+      for (const a of k.aliases) {
+        hit = fuzzyHitKeywordWhitelisted(text, a);
+        if (hit.hit) break;
+      }
+    }
+    if (hit.hit) {
+      foundBadFuzzy.push(k);
+      if (hit.sample) lastSuspectHighlightTargets.push({ word: hit.sample, aliases: [] });
+      else lastSuspectHighlightTargets.push(k);
+    }
+  }
+
+  const okU = dedupeByWord(foundOk);
+  const badExactU = dedupeByWord(foundBadExact);
+  const suspectU = dedupeByWord(foundBadLoose.concat(foundBadFuzzy));
+  const badAll = dedupeByWord(badExactU.concat(suspectU));
+  lastSuspectHighlightTargets = dedupeByWord(lastSuspectHighlightTargets);
+
+  setBadOkSus(badExactU.length, suspectU.length, okU.length);
+  summary.textContent = `พบ: ใช้ไม่ได้ ${badExactU.length} | น่าสงสัย ${suspectU.length} | ใช้ได้ ${okU.length}`;
+
+  if (!okU.length && badAll.length === 0) {
+    resultDiv.innerHTML = '<div class="badge warn">⚠️ ไม่พบคำในฐานข้อมูล (อาจสะกดต่าง/คำใกล้เคียง)</div>';
+    syncHighlightLive();
+    return;
+  }
+
+  let html = '';
+
+  if (badExactU.length) {
+    html += `<div class="badge bad">✘ คำที่ใช้ไม่ได้ (${badExactU.length})</div>`;
+    html += '<ul>' + badExactU.map(x => `<li><span style="color:var(--bad);font-weight:700">${escapeHTML(x.word)}</span></li>`).join('') + '</ul>';
+  }
+
+  if (suspectU.length) {
+    html += `<div style="margin-top:12px" class="badge warn">⚠️ คำน่าสงสัยว่าเข้าข่ายใช้ไม่ได้ (${suspectU.length})</div>`;
+    html += '<ul>' + suspectU.map(x => `<li><span style="color:var(--warn);font-weight:700">${escapeHTML(x.word)}</span></li>`).join('') + '</ul>';
+  }
+
+  if (okU.length) {
+    html += `<div style="margin-top:12px" class="badge ok">✔ คำที่ใช้ได้ (${okU.length})</div>`;
+    html += '<ul>' + okU.map(x => `<li><span style="color:var(--ok);font-weight:700">${escapeHTML(x.word)}</span></li>`).join('') + '</ul>';
+  }
+
+  resultDiv.innerHTML = html || '-';
+  renderSuggestions(badAll, okU);
+  syncHighlightLive();
+}
+
+/***********************
+ * CLEAR
+ ***********************/
+function clearAll() {
+  document.getElementById('inputText').value = '';
+  document.getElementById('result').innerHTML = '-';
+  document.getElementById('matchSummary').textContent = 'พบ: -';
+  document.getElementById('suggestions').innerHTML = '';
+  setBadOkSus(0,0,0);
+  lastSuspectHighlightTargets = [];
+  syncHighlightLive();
+}
+
+/***********************
+ * GUIDE
+ ***********************/
+function rebuildCategoryFilter() {
+  const select = document.getElementById('categoryFilter');
+  select.innerHTML = '<option value="all">ทั้งหมด</option>';
+  Object.keys(keywordLibraryData)
+    .sort((a,b) => a.localeCompare(b,'th'))
+    .forEach(cat => {
+      const opt = document.createElement('option');
+      opt.value = cat;
+      opt.textContent = cat;
+      select.appendChild(opt);
+    });
+}
+
+function rebuildTopicFilter() {
+  const cat = document.getElementById('categoryFilter').value;
+  const topicSelect = document.getElementById('topicFilter');
+  topicSelect.innerHTML = '<option value="all">ทั้งหมด</option>';
+
+  const set = new Set();
+  if (cat === 'all') {
+    Object.keys(keywordLibraryData).forEach(c => Object.keys(keywordLibraryData[c] || {}).forEach(t => set.add(t)));
+  } else {
+    Object.keys(keywordLibraryData[cat] || {}).forEach(t => set.add(t));
+  }
+  Array.from(set).sort((a,b)=>a.localeCompare(b,'th')).forEach(t => {
+    const opt = document.createElement('option');
+    opt.value = t;
+    opt.textContent = t;
+    topicSelect.appendChild(opt);
+  });
+}
+
+function onCategoryChange() {
+  rebuildTopicFilter();
+  renderKeywordLibrary();
+}
+
+function renderKeywordLibrary() {
+  const category = document.getElementById('categoryFilter').value;
+  const topic = document.getElementById('topicFilter').value;
+  const container = document.getElementById('keywordLibrary');
+  const sortNum = (a,b) => (a.no ?? 1e15) - (b.no ?? 1e15);
+
+  let html = '';
+  const cats = (category === 'all') ? Object.keys(keywordLibraryData) : [category];
+
+  cats.filter(c => !!keywordLibraryData[c])
+    .sort((a,b)=>a.localeCompare(b,'th'))
+    .forEach(cat => {
+      const topicsObj = keywordLibraryData[cat];
+      const topicKeys = Object.keys(topicsObj).filter(tk => topic === 'all' ? true : tk === topic);
+      if (!topicKeys.length) return;
+
+      html += `<div class="topic-block"><h4>📌 ${escapeHTML(cat)}</h4>`;
+
+      for (const tk of topicKeys) {
+        const t = topicsObj[tk];
+        const allow = (t.allowItems||[]).slice().sort(sortNum);
+        const forbid = (t.forbidItems||[]).slice().sort(sortNum);
+
+        html += `<div class="topic-title"><b>${escapeHTML(t.topic)}</b></div>`;
+
+        let n = 1;
+
+        for (const it of allow) {
+          const rec = cleanSuggestion(it.rewrite);
+          html += `<div class="line">
+            <div class="n">${n}.</div>
+            <div>
+              <span class="kdot ok"></span>${escapeHTML(it.keyword)}
+              ${rec ? `<span class="muted" style="font-size:12px"> • แนะนำ: ${escapeHTML(rec)}</span>` : ``}
+            </div>
+          </div>`;
+          n++;
+        }
+
+        for (const it of forbid) {
+          const rec = cleanSuggestion(it.rewrite);
+          html += `<div class="line">
+            <div class="n">${n}.</div>
+            <div>
+              <span class="kdot bad"></span>${escapeHTML(it.keyword)}
+              ${rec ? `<span class="muted" style="font-size:12px"> • แนะนำ: ${escapeHTML(rec)}</span>` : `<span class="muted" style="font-size:12px"> • แนะนำ: -</span>`}
+            </div>
+          </div>`;
+          n++;
+        }
+      }
+
+      html += `</div>`;
+    });
+
+  container.innerHTML = html || '<i class="muted">ไม่พบข้อมูล</i>';
+}
+
+/***********************
+ * LOAD (CSV)
+ ***********************/
+async function loadFromGoogleSheets() {
+  try {
+    setLoadStatus('neutral', 'กำลังโหลดฐานข้อมูล…');
+
+    const res = await fetch(CSV_URL, { cache: 'no-store' });
+    const raw = await res.text();
+    if (raw.trim().startsWith('<')) throw new Error('Google returned HTML');
+
+    const table = parseCSV(raw);
+    if (!table.length) throw new Error('Empty CSV');
+
+    const headers = table[0] || [];
+
+    const idxCategory = findColIndex(headers, ['Category', 'หมวดหมู่']);
+    const idxTopic    = findColIndex(headers, ['TOPIC', 'Topic', 'หัวข้อ']);
+    const idxNo       = findColIndex(headers, ['No.', 'No', 'ลำดับ', '#']);
+    const idxKeyword  = findColIndex(headers, ['Keyword', 'คำที่ต้องการตรวจ', 'คำ']);
+    const idxStatus   = findColIndex(headers, ['Status', 'สถานะ']);
+    const idxRewrite  = findColIndex(headers, ['คำที่สามารถใช้โฆษณาได้', 'Rewrite', 'คำแนะนำ', 'ปรับเป็น', 'คำแทน']);
+    const idxAliases  = findColIndex(headers, ['Aliases', 'Alias', 'คำพ้อง', 'คำเรียกอื่น', 'คำสะกดอื่น']);
+
+    allowKeywords = [];
+    forbidKeywords = [];
+    Object.keys(keywordLibraryData).forEach(k => delete keywordLibraryData[k]);
+
+    const rows = table.slice(1);
+
+    for (const r of rows) {
+      const cells = r.map(x => normalizeText(x));
+
+      const categoryRaw = cells[idxCategory] ?? cells[0] ?? '';
+      const topicRaw    = cells[idxTopic]    ?? cells[1] ?? '';
+      const noRaw       = cells[idxNo]       ?? cells[2] ?? '';
+      const keywordRaw  = cells[idxKeyword]  ?? cells[3] ?? '';
+      const statusRaw   = cells[idxStatus]   ?? cells[4] ?? '';
+      const rewriteRaw  = (idxRewrite >= 0) ? (cells[idxRewrite] ?? '') : (cells[5] ?? '');
+      const aliasesRaw  = (idxAliases >= 0) ? (cells[idxAliases] ?? '') : '';
+
+      const keyword = normalizeText(keywordRaw).trim();
+      if (!keyword) continue;
+
+      const s = normalizeKey(statusRaw);
+      const isForbid = s.includes('ใช้ไม่ได้') || s.includes('ห้ามใช้') || s.includes('ห้าม');
+      const isAllow  = !isForbid && (s.includes('ใช้ได้') || s.includes('อนุญาต') || s.includes('ผ่าน'));
+      if (!isAllow && !isForbid) continue;
+
+      const category = normalizeKey(categoryRaw) || '(ไม่ระบุหมวดหมู่)';
+      const topic = normalizeKey(topicRaw) || '(ไม่ระบุ Topic)';
+      const parsedNo = Number.isFinite(Number(noRaw)) ? Number(noRaw) : NaN;
+
+      const manualAliases = parseAliases(aliasesRaw);
+      const autoAliases = generateAutoAliases(keyword);
+      const smartAliases = generateSmartAliases(keyword);
+      const aliases = Array.from(new Set([].concat(manualAliases, autoAliases, smartAliases).filter(Boolean)));
+
+      const rewrite = normalizeText(rewriteRaw).trim();
+
+      if (isAllow) allowKeywords.push({ word: keyword, rewrite, aliases });
+      if (isForbid) forbidKeywords.push({ word: keyword, rewrite, aliases });
+
+      if (!keywordLibraryData[category]) keywordLibraryData[category] = {};
+      if (!keywordLibraryData[category][topic]) {
+        keywordLibraryData[category][topic] = { topic, allowItems: [], forbidItems: [] };
+      }
+      if (isAllow) keywordLibraryData[category][topic].allowItems.push({ no: parsedNo, keyword, rewrite });
+      if (isForbid) keywordLibraryData[category][topic].forbidItems.push({ no: parsedNo, keyword, rewrite });
+    }
+
+    allowKeywords = dedupeByWord(allowKeywords);
+    forbidKeywords = dedupeByWord(forbidKeywords);
+    rebuildWhitelistTokens();
+
+    document.getElementById('keywordCount').textContent =
+      `ใช้ได้: ${allowKeywords.length} | ใช้ไม่ได้: ${forbidKeywords.length}`;
+
+    rebuildCategoryFilter();
+    rebuildTopicFilter();
+    renderKeywordLibrary();
+    syncHighlightLive();
+    clearAll();
+
+    setLoadStatus('ok', 'ฐานข้อมูลพร้อมใช้งาน');
+  } catch (e) {
+    console.error(e);
+    setLoadStatus('bad', 'โหลดฐานข้อมูลไม่สำเร็จ');
+    document.getElementById('keywordLibrary').innerHTML =
+      `<div class="badge bad">โหลดข้อมูลจาก Google Sheets ไม่สำเร็จ</div>`;
+  }
+}
+
+/***********************
+ * INIT
+ ***********************/
+loadFromGoogleSheets();
 </script>
 </body>
 </html>
