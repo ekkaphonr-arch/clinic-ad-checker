@@ -46,6 +46,11 @@
       min-height: 100vh;
     }
 
+    /* Admin-only (ซ่อนข้อมูลหลังบ้านตามที่ขอ) */
+    .admin-only{ display:none !important; }
+    body.is-admin .admin-only{ display:inline-flex !important; }
+    body.is-admin .admin-only.block{ display:block !important; }
+
     /* Top header bar */
     .topbar{
       position: sticky;
@@ -206,7 +211,7 @@
       border: 1px solid transparent;
       border-radius: 16px;
       background: transparent;
-      color: transparent;       /* hide typed text, show highlighter below */
+      color: transparent;
       caret-color: var(--ink);
       resize: vertical;
       overflow: auto;
@@ -292,6 +297,13 @@
       font-size: 13px;
       letter-spacing: .1px;
     }
+    .s-group{ margin-top: 10px; }
+    .s-title{
+      display:flex; align-items:center; gap:8px;
+      font-size: 12px; font-weight: 800;
+      margin-bottom: 6px;
+    }
+    .s-title .dot{ width:8px;height:8px; }
     .tag{
       display:inline-block;
       padding: 6px 10px;
@@ -299,9 +311,19 @@
       font-size: 12px;
       font-weight: 700;
       margin: 4px 6px 0 0;
-      border: 1px solid rgba(34,197,94,.18);
+      border: 1px solid rgba(148,163,184,.35);
+      background: rgba(148,163,184,.10);
+      color:#0f172a;
+    }
+    .tag.ok{
+      border-color: rgba(34,197,94,.18);
       background: rgba(34,197,94,.10);
       color:#166534;
+    }
+    .tag.bad{
+      border-color: rgba(220,38,38,.18);
+      background: rgba(220,38,38,.10);
+      color:#991b1b;
     }
 
     /* Guide filters */
@@ -357,6 +379,16 @@
       margin: 0 0 8px 0;
       font-size: 14px;
     }
+
+    .topic-title{
+      margin-top:10px;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .topic-title b{ font-size: 13px; }
+
     .line{
       display:flex; gap:10px; align-items:flex-start;
       padding: 6px 0;
@@ -365,16 +397,20 @@
     }
     .line:first-child{ border-top:none; }
     .line .n{ width: 20px; color: var(--muted); font-weight: 700; }
-    .mark{
-      font-weight: 800;
-      padding: 2px 8px;
+
+    /* จุดสีหน้า keyword (แทนไอคอน/ป้าย ใช้ได้-ใช้ไม่ได้ ใน topic) */
+    .kdot{
+      display:inline-block;
+      width: 8px;
+      height: 8px;
       border-radius: 999px;
-      font-size: 11px;
-      border:1px solid transparent;
-      white-space:nowrap;
+      margin-right: 8px;
+      transform: translateY(-1px);
+      background: #94a3b8;
+      box-shadow: 0 0 0 3px rgba(148,163,184,.18);
     }
-    .mark.ok{ color:#166534; background: rgba(34,197,94,.10); border-color: rgba(34,197,94,.20); }
-    .mark.bad{ color:#991b1b; background: rgba(220,38,38,.10); border-color: rgba(220,38,38,.20); }
+    .kdot.ok{ background: var(--ok); box-shadow: 0 0 0 3px rgba(34,197,94,.18); }
+    .kdot.bad{ background: var(--bad); box-shadow: 0 0 0 3px rgba(220,38,38,.18); }
 
     .footer{
       margin-top: 18px;
@@ -399,7 +435,6 @@
     <div class="topbar-inner">
       <div class="brand">
         <div class="logo" aria-hidden="true">
-          <!-- Shield-check icon (SVG) -->
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
             <path d="M12 2l7 4v6c0 5-3 9-7 10-4-1-7-5-7-10V6l7-4z" stroke="white" stroke-width="1.8"/>
             <path d="M8.6 12.3l2.1 2.1 4.7-4.7" stroke="white" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
@@ -412,10 +447,13 @@
       </div>
 
       <div class="top-actions">
-        <div class="pill"><span class="dot neutral" id="dotStatus"></span><span id="loadStatus">กำลังโหลดฐานข้อมูล…</span></div>
-        <div class="pill" id="keywordCount">ใช้ได้: 0 | ใช้ไม่ได้: 0</div>
+        <!-- ซ่อน “หลังบ้าน” ตามที่ขอ (เปิดด้วย ?admin=1) -->
+        <div class="pill admin-only"><span class="dot neutral" id="dotStatus"></span><span id="loadStatus">กำลังโหลดฐานข้อมูล…</span></div>
+        <div class="pill admin-only" id="keywordCount">ใช้ได้: 0 | ใช้ไม่ได้: 0</div>
+        <div class="pill admin-only">แหล่งข้อมูล: <a id="srcLink" target="_blank" rel="noreferrer">Google Sheets CSV</a></div>
+
+        <!-- อันนี้ยังแสดงให้ผู้ใช้ได้ (สรุปผลตรวจ) -->
         <div class="pill" id="matchSummary">พบ: -</div>
-        <div class="pill">แหล่งข้อมูล: <a id="srcLink" target="_blank" rel="noreferrer">Google Sheets CSV</a></div>
       </div>
     </div>
   </div>
@@ -486,7 +524,7 @@
           <div id="suggestions"></div>
 
           <div class="footer" style="margin-top:14px">
-            <div>Tip: ถ้าพิมพ์ไม่ตรง 100% ระบบจะพยายามจับ “ใกล้เคียง” ในกลุ่ม <b>น่าสงสัย</b></div>
+            <div>Tip: ระบบรองรับเว้นวรรค/ขีด/สัญลักษณ์ที่ต่างกัน เช่น <b>before - after</b>, <b>before–after</b>, <b>before/after</b></div>
             <div>© <b>CHECK SABUY</b></div>
           </div>
         </div>
@@ -526,6 +564,16 @@
 
 <script>
 /***********************
+ * Admin mode toggle
+ * - ซ่อนข้อมูลหลังบ้านเป็นค่าเริ่มต้น
+ * - เปิดดูได้ด้วย URL: ?admin=1
+ ***********************/
+(function initAdminMode(){
+  const isAdmin = new URLSearchParams(location.search).get('admin') === '1';
+  if (isAdmin) document.body.classList.add('is-admin');
+})();
+
+/***********************
  * CSV URL (Publish to web)
  ***********************/
 const CSV_URL =
@@ -544,8 +592,8 @@ const EXTRA_WHITELIST_TOKENS = [
  * STATE
  ***********************/
 const keywordLibraryData = {};
-let allowKeywords = [];   // { word, aliases?:[] }
-let forbidKeywords = [];  // { word, rewrite, aliases?:[] }
+let allowKeywords = [];   // { word, rewrite?, aliases?:[] }
+let forbidKeywords = [];  // { word, rewrite?, aliases?:[] }
 let whitelistTokens = new Set();
 
 /***********************
@@ -560,11 +608,24 @@ function escapeHTML(s) {
 }
 function escapeRegExp(s) { return String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
 
+/**
+ * Flexible regex: จับ keyword แบบ "มนุษย์พิมพ์"
+ * - ไม่แคร์เว้นวรรค/ขีด/สัญลักษณ์ระหว่างคำมาก
+ * - เช่น before - after / before–after / before/after / before   after
+ */
 function buildFlexibleRegex(keyword) {
   const raw = normalizeText(keyword).trim();
   if (!raw) return null;
-  const parts = raw.split(/\s+/).filter(Boolean).map(escapeRegExp);
-  return parts.length ? new RegExp(parts.join('\\s+'), 'g') : null;
+
+  // ดึงเป็น token เฉพาะตัวอักษร/เลข/ไทย (ตัดพวก - / ฯลฯ ออก)
+  const tokens = raw.match(/[\u0E00-\u0E7Fa-zA-Z0-9]+/g);
+  if (!tokens || !tokens.length) return null;
+
+  // อนุญาตตัวคั่นได้หลากหลาย (เว้นวรรค/ขีด/สแลช/จุลภาค/วงเล็บ ฯลฯ) หรือไม่มีตัวคั่นเลยก็ได้
+  const SEP = '[\\s\\-–—_/\\\\|.,;:!?()\\[\\]{}"“”\\\'‘’]*';
+  const pattern = tokens.map(t => escapeRegExp(t)).join(SEP);
+
+  return new RegExp(pattern, 'gi');
 }
 
 function dedupeByWord(list) {
@@ -579,6 +640,7 @@ function dedupeByWord(list) {
 function setLoadStatus(type, text){
   const el = document.getElementById('loadStatus');
   const dot = document.getElementById('dotStatus');
+  if (!el || !dot) return;
   el.textContent = text;
   dot.className = 'dot ' + (type || 'neutral');
 }
@@ -685,7 +747,7 @@ function generateAutoAliases(word) {
 }
 
 /***********************
- * WHITELIST / FUZZY
+ * WHITELIST / FUZZY (เดิม)
  ***********************/
 function normalizeThaiLite(s) {
   return String(s || '')
@@ -757,18 +819,6 @@ function isWhitelistedToken(token) {
     if (tN.includes(w) || w.includes(tN)) return true;
   }
   return false;
-}
-
-function buildLooseThaiRegex(keyword) {
-  const raw = String(keyword || '').trim();
-  if (!raw) return null;
-  const cleaned = raw.replace(/\s+/g, '').replace(/[^\u0E00-\u0E7Fa-zA-Z0-9]/g, '');
-  if (!cleaned) return null;
-  const THAI_MARKS = '[\\u0E31\\u0E34-\\u0E3A\\u0E47-\\u0E4E]*';
-  const parts = [];
-  for (const ch of cleaned) parts.push(`${escapeRegExp(ch)}${THAI_MARKS}`);
-  const pattern = parts.join('\\s*');
-  return new RegExp(pattern, 'gi');
 }
 
 function extractWhitelistSubtokens(text) {
@@ -880,7 +930,7 @@ function syncHighlightLive() {
 }
 
 /***********************
- * Suggestions (จากแถวที่ถูกตรวจพบ)
+ * Suggestions (ทั้งฝั่งใช้ได้ + ใช้ไม่ได้)
  ***********************/
 function uniq(arr) {
   const s = new Set();
@@ -893,22 +943,26 @@ function uniq(arr) {
   return out;
 }
 
-function getReplacement(item) {
-  const r = normalizeText(item.rewrite || '').trim();
-  return r ? r : '-';
+function cleanSuggestion(v){
+  const r = normalizeText(v || '').trim();
+  if (!r) return '';
+  if (normalizeKey(r) === '-') return '';
+  return r;
 }
 
-function renderSuggestionsFromBad(allBadItems) {
+function renderSuggestions(badItems, okItems) {
   const box = document.getElementById('suggestions');
-  const reps = uniq(
-    allBadItems
-      .map(it => getReplacement(it))
-      .filter(x => normalizeKey(x) && normalizeKey(x) !== '-')
-  );
 
-  if (!allBadItems.length) { box.innerHTML = ''; return; }
+  const okRecs = uniq((okItems||[]).map(it => cleanSuggestion(it.rewrite)).filter(Boolean));
+  const badRecs = uniq((badItems||[]).map(it => cleanSuggestion(it.rewrite)).filter(Boolean));
 
-  if (!reps.length) {
+  if ((!okItems || !okItems.length) && (!badItems || !badItems.length)) {
+    box.innerHTML = '';
+    return;
+  }
+
+  // ถ้ามีคำเจอ แต่ไม่มีคำแนะนำเลย
+  if (!okRecs.length && !badRecs.length) {
     box.innerHTML = `
       <div class="suggestion-box">
         <h4>💡 ข้อแนะนำ / คำโฆษณาที่แนะนำ</h4>
@@ -918,12 +972,30 @@ function renderSuggestionsFromBad(allBadItems) {
     return;
   }
 
-  box.innerHTML = `
-    <div class="suggestion-box">
-      <h4>💡 ข้อแนะนำ / คำโฆษณาที่แนะนำ</h4>
-      <div>${reps.map(x => `<span class="tag">${escapeHTML(x)}</span>`).join(' ')}</div>
-    </div>
+  let html = `<div class="suggestion-box">
+    <h4>💡 ข้อแนะนำ / คำโฆษณาที่แนะนำ</h4>
   `;
+
+  if (okRecs.length) {
+    html += `
+      <div class="s-group">
+        <div class="s-title"><span class="dot ok"></span> สำหรับคำที่ใช้ได้</div>
+        <div>${okRecs.map(x => `<span class="tag ok">${escapeHTML(x)}</span>`).join(' ')}</div>
+      </div>
+    `;
+  }
+
+  if (badRecs.length) {
+    html += `
+      <div class="s-group">
+        <div class="s-title"><span class="dot bad"></span> สำหรับคำที่ใช้ไม่ได้/น่าสงสัย</div>
+        <div>${badRecs.map(x => `<span class="tag bad">${escapeHTML(x)}</span>`).join(' ')}</div>
+      </div>
+    `;
+  }
+
+  html += `</div>`;
+  box.innerHTML = html;
 }
 
 /***********************
@@ -933,6 +1005,25 @@ function setBadOkSus(bad, sus, ok){
   document.getElementById('badgeBad').textContent = `✘ ใช้ไม่ได้: ${bad}`;
   document.getElementById('badgeSus').textContent = `⚠️ น่าสงสัย: ${sus}`;
   document.getElementById('badgeOk').textContent  = `✔ ใช้ได้: ${ok}`;
+}
+
+// loose contains: ตัดช่องว่าง/สัญลักษณ์ออก เพื่อจับคำยาว ๆ แบบ before - after ได้
+function normalizeForContains(s){
+  return String(s || '')
+    .toLowerCase()
+    .replace(/\s+/g,'')
+    .replace(/[^\u0E00-\u0E7Fa-z0-9]/g,'')
+    .replace(/[่้๊๋์]/g,'')
+    .replace(/ๆ/g,'')
+    .trim();
+}
+
+function looseContains(text, keyword){
+  const t = normalizeForContains(text);
+  const k = normalizeForContains(keyword);
+  if (!t || !k) return false;
+  if (k.length < 4) return false;          // กัน false positive
+  return t.includes(k);
 }
 
 function checkText() {
@@ -970,19 +1061,23 @@ function checkText() {
 
   const exactSet = new Set(foundBadExact.map(x => normalizeKey(x.word)));
 
+  // น่าสงสัย: ถ้าไม่เจอแบบ exact แต่เจอแบบตัดสัญลักษณ์/เว้นวรรค (เช่น before - after)
   for (const k of forbidKeywords) {
     if (exactSet.has(normalizeKey(k.word))) continue;
+
     const candidates = [k.word].concat(Array.isArray(k.aliases) ? k.aliases : []);
     let hitLoose = false;
+
     for (const c of candidates) {
-      const loose = buildLooseThaiRegex(c);
-      if (loose && loose.test(text)) { hitLoose = true; break; }
+      if (looseContains(text, c)) { hitLoose = true; break; }
     }
+
     if (hitLoose) foundBadLoose.push(k);
   }
 
   const looseSet = new Set(foundBadLoose.map(x => normalizeKey(x.word)));
 
+  // fuzzy เดิม (พิมพ์คลาดเล็กน้อย) สำหรับกลุ่มคำต้องห้าม
   for (const k of forbidKeywords) {
     const key = normalizeKey(k.word);
     if (exactSet.has(key) || looseSet.has(key)) continue;
@@ -1029,7 +1124,10 @@ function checkText() {
   }
 
   resultDiv.innerHTML = html || '-';
-  renderSuggestionsFromBad(badAll);
+
+  // ✅ เพิ่มคำแนะนำทั้งฝั่งใช้ได้และใช้ไม่ได้
+  renderSuggestions(badAll, okU);
+
   syncHighlightLive();
 }
 
@@ -1108,26 +1206,34 @@ function renderKeywordLibrary() {
         const allow = (t.allowItems||[]).slice().sort(sortNum);
         const forbid = (t.forbidItems||[]).slice().sort(sortNum);
 
-        html += `<div style="margin-top:10px">
-          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-            <b style="font-size:13px">${escapeHTML(t.topic)}</b>
-            <span class="mark ok">ใช้ได้</span>
-            <span class="mark bad">ใช้ไม่ได้</span>
-          </div>
-        `;
+        // ✅ ตามที่ขอ: ไม่ต้องโชว์ไอคอน/ป้าย ใช้ได้/ใช้ไม่ได้ ที่หัวข้อ Topic แล้ว
+        html += `<div class="topic-title"><b>${escapeHTML(t.topic)}</b></div>`;
 
         let n = 1;
+
         for (const it of allow) {
-          html += `<div class="line"><div class="n">${n}.</div><div><span class="mark ok">✔ ใช้ได้</span> ${escapeHTML(it.keyword)}</div></div>`;
-          n++;
-        }
-        for (const it of forbid) {
-          const rep = normalizeText(it.rewrite || '').trim() || '-';
-          html += `<div class="line"><div class="n">${n}.</div><div><span class="mark bad">✘ ใช้ไม่ได้</span> ${escapeHTML(it.keyword)} <span class="muted" style="font-size:12px">• แนะนำ: ${escapeHTML(rep)}</span></div></div>`;
+          const rec = cleanSuggestion(it.rewrite);
+          html += `<div class="line">
+            <div class="n">${n}.</div>
+            <div>
+              <span class="kdot ok"></span>${escapeHTML(it.keyword)}
+              ${rec ? `<span class="muted" style="font-size:12px"> • แนะนำ: ${escapeHTML(rec)}</span>` : ``}
+            </div>
+          </div>`;
           n++;
         }
 
-        html += `</div>`;
+        for (const it of forbid) {
+          const rec = cleanSuggestion(it.rewrite);
+          html += `<div class="line">
+            <div class="n">${n}.</div>
+            <div>
+              <span class="kdot bad"></span>${escapeHTML(it.keyword)}
+              ${rec ? `<span class="muted" style="font-size:12px"> • แนะนำ: ${escapeHTML(rec)}</span>` : `<span class="muted" style="font-size:12px"> • แนะนำ: -</span>`}
+            </div>
+          </div>`;
+          n++;
+        }
       }
 
       html += `</div>`;
@@ -1193,16 +1299,16 @@ async function loadFromGoogleSheets() {
       const autoAliases = generateAutoAliases(keyword);
       const aliases = Array.from(new Set([].concat(manualAliases, autoAliases).filter(Boolean)));
 
-      const rewrite = normalizeText(rewriteRaw).trim(); // อาจว่าง
+      const rewrite = normalizeText(rewriteRaw).trim(); // ✅ ใช้ได้ก็มีคำแนะนำได้
 
-      if (isAllow) allowKeywords.push({ word: keyword, aliases });
+      if (isAllow) allowKeywords.push({ word: keyword, rewrite, aliases });
       if (isForbid) forbidKeywords.push({ word: keyword, rewrite, aliases });
 
       if (!keywordLibraryData[category]) keywordLibraryData[category] = {};
       if (!keywordLibraryData[category][topic]) {
         keywordLibraryData[category][topic] = { topic, allowItems: [], forbidItems: [] };
       }
-      if (isAllow) keywordLibraryData[category][topic].allowItems.push({ no: parsedNo, keyword });
+      if (isAllow) keywordLibraryData[category][topic].allowItems.push({ no: parsedNo, keyword, rewrite });
       if (isForbid) keywordLibraryData[category][topic].forbidItems.push({ no: parsedNo, keyword, rewrite });
     }
 
@@ -1210,8 +1316,9 @@ async function loadFromGoogleSheets() {
     forbidKeywords = dedupeByWord(forbidKeywords);
     rebuildWhitelistTokens();
 
-    document.getElementById('keywordCount').textContent =
-      `ใช้ได้: ${allowKeywords.length} | ใช้ไม่ได้: ${forbidKeywords.length}`;
+    // admin-only UI
+    const kc = document.getElementById('keywordCount');
+    if (kc) kc.textContent = `ใช้ได้: ${allowKeywords.length} | ใช้ไม่ได้: ${forbidKeywords.length}`;
 
     rebuildCategoryFilter();
     rebuildTopicFilter();
@@ -1235,3 +1342,4 @@ loadFromGoogleSheets();
 </script>
 </body>
 </html>
+
