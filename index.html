@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>CHECK SABUY | ตรวจคำโฆษณา คลินิก</title>
 
-  <!-- Google Font: Prompt (ฟรี) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -43,12 +42,10 @@
       min-height: 100vh;
     }
 
-    /* Admin-only (ซ่อนข้อมูลหลังบ้านตามที่ขอ) */
     .admin-only{ display:none !important; }
     body.is-admin .admin-only{ display:inline-flex !important; }
     body.is-admin .admin-only.block{ display:block !important; }
 
-    /* Top header bar */
     .topbar{
       position: sticky;
       top:0;
@@ -120,9 +117,7 @@
       color: var(--ink);
       white-space: nowrap;
     }
-    .dot{
-      width:8px;height:8px;border-radius:999px;background:#94a3b8;
-    }
+    .dot{ width:8px;height:8px;border-radius:999px;background:#94a3b8; }
     .dot.ok{ background: var(--ok); }
     .dot.bad{ background: var(--bad); }
     .dot.neutral{ background:#94a3b8; }
@@ -133,7 +128,6 @@
       font-weight:700;
     }
 
-    /* Layout */
     .wrap{
       max-width: 1160px;
       margin: 0 auto;
@@ -181,7 +175,6 @@
 
     .card-body{ padding: 16px 18px; }
 
-    /* Editor */
     .editor-wrap { position: relative; width: 100%; }
     .highlighter {
       position: absolute;
@@ -215,12 +208,11 @@
       outline: none;
     }
 
-    /* ✅ ไฮไลต์ 3 สถานะ */
+    /* ไฮไลต์ 3 สถานะ */
     .hl-ok  { background: rgba(34, 197, 94, 0.25); border-radius: 8px; padding: 0 2px; }
     .hl-bad { background: rgba(220, 38, 38, 0.25); border-radius: 8px; padding: 0 2px; }
-    .hl-sus { background: rgba(245, 158, 11, 0.25); border-radius: 8px; padding: 0 2px; } /* <-- คำน่าสงสัย */
+    .hl-sus { background: rgba(245, 158, 11, 0.25); border-radius: 8px; padding: 0 2px; } /* น่าสงสัย */
 
-    /* Buttons */
     .btns{ display:flex; gap:10px; flex-wrap:wrap; margin-top: 12px; }
     .btn{
       border: none;
@@ -256,7 +248,6 @@
     }
     .btn-ghost .btn-icon{ background: rgba(37,99,235,.10); }
 
-    /* Result */
     .result-row{
       display:flex;
       gap:10px;
@@ -277,10 +268,7 @@
     .badge.warn{ color: #92400e; background: rgba(245,158,11,.12); border-color: rgba(245,158,11,.22); }
     .badge.ok{ color: #166534; background: rgba(34,197,94,.10); border-color: rgba(34,197,94,.22); }
 
-    .result-area ul{
-      margin: 8px 0 0 18px;
-      padding:0;
-    }
+    .result-area ul{ margin: 8px 0 0 18px; padding:0; }
     .result-area li{ margin: 4px 0; }
     .muted{ color: var(--muted); }
 
@@ -324,7 +312,6 @@
       color:#991b1b;
     }
 
-    /* Guide filters */
     .filters{
       display:flex;
       gap: 10px;
@@ -352,9 +339,7 @@
       box-shadow: 0 0 0 6px var(--ring);
     }
 
-    .guide{
-      padding: 12px 18px 18px;
-    }
+    .guide{ padding: 12px 18px 18px; }
     .guide .hr{
       height:1px;
       background: rgba(226,232,240,.8);
@@ -368,10 +353,7 @@
       margin-bottom: 12px;
       box-shadow: 0 10px 22px rgba(2,6,23,.04);
     }
-    .topic-block h4{
-      margin: 0 0 8px 0;
-      font-size: 14px;
-    }
+    .topic-block h4{ margin: 0 0 8px 0; font-size: 14px; }
 
     .topic-title{
       margin-top:10px;
@@ -391,7 +373,6 @@
     .line:first-child{ border-top:none; }
     .line .n{ width: 20px; color: var(--muted); font-weight: 700; }
 
-    /* จุดสีหน้า keyword */
     .kdot{
       display:inline-block;
       width: 8px;
@@ -455,7 +436,12 @@
         <div class="card-header">
           <div>
             <h2>🧾 ตรวจข้อความโฆษณา</h2>
-            <p>ไฮไลท์อัตโนมัติ: <b style="color:var(--ok)">เขียว</b> = ใช้ได้, <b style="color:var(--bad)">แดง</b> = ใช้ไม่ได้, <b style="color:var(--warn)">ส้ม</b> = น่าสงสัย</p>
+            <p>
+              ไฮไลท์อัตโนมัติ:
+              <b style="color:var(--ok)">เขียว</b> = ใช้ได้,
+              <b style="color:var(--bad)">แดง</b> = ใช้ไม่ได้,
+              <b style="color:var(--warn)">ส้ม</b> = น่าสงสัย
+            </p>
           </div>
           <div class="pill" style="margin-left:auto">
             <span class="dot neutral"></span> โหมด: ตรวจคำ
@@ -513,7 +499,7 @@
           <div id="suggestions"></div>
 
           <div class="footer" style="margin-top:14px">
-            <div>Tip: รองรับเว้นวรรค/ขีด/สัญลักษณ์ และ “คำยาว” จะจับจากคำย่อ/ช่วงสำคัญอัตโนมัติ</div>
+            <div>Tip: “คำน่าสงสัย” จะถูกไฮไลต์สีส้มในช่องข้อความด้วย (หลังจากกดตรวจ)</div>
             <div>© <b>CHECK SABUY</b></div>
           </div>
         </div>
@@ -560,15 +546,12 @@
 })();
 
 /***********************
- * CSV URL (Publish to web)
+ * CSV URL
  ***********************/
 const CSV_URL =
   'https://docs.google.com/spreadsheets/d/e/2PACX-1vTYcW7K_bjXlX3ns7Ok_4mbb_45ogxQHwKwyw-2Im9v1iUlS96TPICBy_5t5n973tP3YB1qEB9mQTqc/pub?output=csv';
 document.getElementById('srcLink').href = CSV_URL;
 
-/***********************
- * OPTIONAL whitelist tokens (เพิ่มเองได้)
- ***********************/
 const EXTRA_WHITELIST_TOKENS = [
   'botox','filler','hifu','meso','ulthera','thermage','rejuran',
   'โบท็อก','โบทอก','ฟิลเลอร์','ไฮฟู','เมโส','ร้อยไหม','เลเซอร์','รีจูรัน'
@@ -582,8 +565,8 @@ let allowKeywords = [];
 let forbidKeywords = [];
 let whitelistTokens = new Set();
 
-/* ✅ เก็บ “คำน่าสงสัย” ล่าสุด เพื่อเอาไปไฮไลต์เป็นสีส้ม */
-let lastSuspectKeywords = [];
+/* ✅ จุดสำคัญ: เก็บ “คำที่จะไฮไลต์เป็นคำน่าสงสัย” ตาม “สิ่งที่พบจริงในข้อความผู้ใช้” */
+let lastSuspectHighlightTargets = []; // [{word, aliases?:[]}...]
 
 /***********************
  * UTILS
@@ -597,9 +580,7 @@ function escapeHTML(s) {
 }
 function escapeRegExp(s) { return String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
 
-/**
- * Flexible regex: จับ keyword แบบ "มนุษย์พิมพ์"
- */
+/* Flexible regex: รองรับเว้นวรรค/ขีด/สัญลักษณ์ */
 function buildFlexibleRegex(keyword) {
   const raw = normalizeText(keyword).trim();
   if (!raw) return null;
@@ -683,7 +664,7 @@ function parseAliases(raw) {
 }
 
 /***********************
- * AUTO-ALIASES (เดิม)
+ * AUTO-ALIASES
  ***********************/
 function generateAutoAliases(word) {
   const w = normalizeText(word || '').trim();
@@ -729,7 +710,7 @@ function generateAutoAliases(word) {
 }
 
 /***********************
- * SMART ALIASES (ใหม่)
+ * SMART ALIASES (คำยาว)
  ***********************/
 function extractAcronyms(text) {
   const s = String(text || '');
@@ -757,7 +738,7 @@ function generateSmartAliases(keyword) {
 }
 
 /***********************
- * WHITELIST / FUZZY (เดิม)
+ * WHITELIST / FUZZY
  ***********************/
 function normalizeThaiLite(s) {
   return String(s || '')
@@ -860,7 +841,7 @@ function fuzzyHitKeywordWhitelisted(userText, keyword) {
 }
 
 /***********************
- * HIGHLIGHT
+ * HIGHLIGHT (สำคัญ)
  ***********************/
 function syncScroll() {
   const ta = document.getElementById('inputText');
@@ -869,7 +850,6 @@ function syncScroll() {
   hl.scrollLeft = ta.scrollLeft;
 }
 
-/* ✅ priority: bad > suspect > ok */
 function typePriority(t){
   if (t === 'bad') return 3;
   if (t === 'sus') return 2;
@@ -891,9 +871,7 @@ function mergeSpans(spans) {
 
     if (s.start >= last.end) { merged.push({...s}); continue; }
 
-    // overlap -> เอาอัน priority สูงกว่า
     if (typePriority(s.type) > typePriority(last.type)) {
-      // ถ้ามันทับบางส่วน ให้ตัด last ก่อน แล้วใส่ s
       if (s.start > last.start) {
         const left = { ...last, end: s.start };
         merged[merged.length-1] = left;
@@ -902,7 +880,6 @@ function mergeSpans(spans) {
         merged[merged.length-1] = { ...s, start: last.start, end: Math.max(s.end, last.end) };
       }
     } else {
-      // last สำคัญกว่า -> ขยาย last ครอบ
       last.end = Math.max(last.end, s.end);
     }
   }
@@ -954,9 +931,9 @@ function buildHighlights(text) {
     }
   };
 
-  // ✅ order ไม่สำคัญแล้ว เพราะ mergeSpans ใช้ priority
+  // ✅ ไฮไลต์ในช่องข้อความ: bad > sus > ok
   pushMatches(allowKeywords, 'ok');
-  pushMatches(lastSuspectKeywords, 'sus');  // <-- น่าสงสัยสีส้ม
+  pushMatches(lastSuspectHighlightTargets, 'sus'); // <-- “น่าสงสัย” จากที่เจอจริงในข้อความผู้ใช้
   pushMatches(forbidKeywords, 'bad');
 
   return renderHighlightWithSpans(original, spans);
@@ -969,7 +946,7 @@ function syncHighlightLive() {
 }
 
 /***********************
- * Suggestions (เหมือนเดิม)
+ * Suggestions
  ***********************/
 function uniq(arr) {
   const s = new Set();
@@ -1041,7 +1018,6 @@ function setBadOkSus(bad, sus, ok){
   document.getElementById('badgeOk').textContent  = `✔ ใช้ได้: ${ok}`;
 }
 
-// loose contains: ตัดช่องว่าง/สัญลักษณ์ออก เพื่อจับ before - after ฯลฯ
 function normalizeForContains(s){
   return String(s || '')
     .toLowerCase()
@@ -1065,11 +1041,13 @@ function checkText() {
   const summary = document.getElementById('matchSummary');
   document.getElementById('suggestions').innerHTML = '';
 
+  // รีเซ็ตเป้าหมายไฮไลต์ส้มทุกครั้งที่กดตรวจ
+  lastSuspectHighlightTargets = [];
+
   if (!allowKeywords.length && !forbidKeywords.length) {
     resultDiv.innerHTML = '<span class="muted">ยังไม่มีฐานข้อมูลคำ</span>';
     summary.textContent = 'พบ: -';
     setBadOkSus(0,0,0);
-    lastSuspectKeywords = [];
     syncHighlightLive();
     return;
   }
@@ -1095,7 +1073,7 @@ function checkText() {
 
   const exactSet = new Set(foundBadExact.map(x => normalizeKey(x.word)));
 
-  // น่าสงสัย: loose contains
+  // suspect: loose contains (เช่น before - after) -> ไฮไลต์ส้มด้วย keyword เดิม (regex จะหาเจอในข้อความจริง)
   for (const k of forbidKeywords) {
     if (exactSet.has(normalizeKey(k.word))) continue;
     const candidates = [k.word].concat(Array.isArray(k.aliases) ? k.aliases : []);
@@ -1103,12 +1081,15 @@ function checkText() {
     for (const c of candidates) {
       if (looseContains(text, c)) { hitLoose = true; break; }
     }
-    if (hitLoose) foundBadLoose.push(k);
+    if (hitLoose) {
+      foundBadLoose.push(k);
+      lastSuspectHighlightTargets.push(k); // ✅ ไฮไลต์ส้มในช่องข้อความ
+    }
   }
 
   const looseSet = new Set(foundBadLoose.map(x => normalizeKey(x.word)));
 
-  // น่าสงสัย: fuzzy
+  // suspect: fuzzy (พิมพ์เพี้ยน) -> ไฮไลต์ส้ม “คำที่พบจริงในข้อความ” จาก hit.sample
   for (const k of forbidKeywords) {
     const key = normalizeKey(k.word);
     if (exactSet.has(key) || looseSet.has(key)) continue;
@@ -1120,7 +1101,16 @@ function checkText() {
         if (hit.hit) break;
       }
     }
-    if (hit.hit) foundBadFuzzy.push(k);
+    if (hit.hit) {
+      foundBadFuzzy.push(k);
+
+      // ✅ ไฮไลต์ส้มจากสิ่งที่ “ผู้ใช้พิมพ์จริง”
+      if (hit.sample) {
+        lastSuspectHighlightTargets.push({ word: hit.sample, aliases: [] });
+      } else {
+        lastSuspectHighlightTargets.push(k);
+      }
+    }
   }
 
   const okU = dedupeByWord(foundOk);
@@ -1128,11 +1118,11 @@ function checkText() {
   const suspectU = dedupeByWord(foundBadLoose.concat(foundBadFuzzy));
   const badAll = dedupeByWord(badExactU.concat(suspectU));
 
+  // กันซ้ำ/กันเป้าหมายว่าง
+  lastSuspectHighlightTargets = dedupeByWord(lastSuspectHighlightTargets);
+
   setBadOkSus(badExactU.length, suspectU.length, okU.length);
   summary.textContent = `พบ: ใช้ไม่ได้ ${badExactU.length} | น่าสงสัย ${suspectU.length} | ใช้ได้ ${okU.length}`;
-
-  // ✅ เก็บไว้ไฮไลต์เป็นสีส้มใน highlighter
-  lastSuspectKeywords = suspectU;
 
   if (!okU.length && badAll.length === 0) {
     resultDiv.innerHTML = '<div class="badge warn">⚠️ ไม่พบคำในฐานข้อมูล (อาจสะกดต่าง/คำใกล้เคียง)</div>';
@@ -1159,6 +1149,8 @@ function checkText() {
 
   resultDiv.innerHTML = html || '-';
   renderSuggestions(badAll, okU);
+
+  // ✅ สำคัญ: หลังตรวจแล้ว ไฮไลต์ส้มต้องขึ้นในช่องข้อความ
   syncHighlightLive();
 }
 
@@ -1171,12 +1163,12 @@ function clearAll() {
   document.getElementById('matchSummary').textContent = 'พบ: -';
   document.getElementById('suggestions').innerHTML = '';
   setBadOkSus(0,0,0);
-  lastSuspectKeywords = [];
+  lastSuspectHighlightTargets = [];
   syncHighlightLive();
 }
 
 /***********************
- * GUIDE (เหมือนเดิม)
+ * GUIDE
  ***********************/
 function rebuildCategoryFilter() {
   const select = document.getElementById('categoryFilter');
@@ -1211,12 +1203,6 @@ function rebuildTopicFilter() {
 function onCategoryChange() {
   rebuildTopicFilter();
   renderKeywordLibrary();
-}
-function cleanSuggestion(v){
-  const r = normalizeText(v || '').trim();
-  if (!r) return '';
-  if (normalizeKey(r) === '-') return '';
-  return r;
 }
 function renderKeywordLibrary() {
   const category = document.getElementById('categoryFilter').value;
@@ -1357,9 +1343,8 @@ async function loadFromGoogleSheets() {
     rebuildCategoryFilter();
     rebuildTopicFilter();
     renderKeywordLibrary();
-    syncHighlightLive();
-    clearAll();
 
+    clearAll();
     setLoadStatus('ok', 'ฐานข้อมูลพร้อมใช้งาน');
   } catch (e) {
     console.error(e);
