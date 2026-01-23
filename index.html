@@ -3,135 +3,526 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Clinic Ad Checker | คู่มือโฆษณาคลินิก</title>
+  <title>CHECK SABUY | ตรวจคำโฆษณา คลินิก</title>
+
+  <!-- Google Font: Prompt (ฟรี) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
   <style>
-    body { font-family: Arial, sans-serif; background:#f4f6f8; padding:40px }
-    .container { background:#fff; max-width:1100px; margin:auto; padding:30px; border-radius:12px; box-shadow:0 2px 12px rgba(0,0,0,0.08)}
-    h1 { margin:0 }
-    .muted { color:#6b7280 }
-    .danger { color:#dc2626; font-weight:bold }
-    .ok { color:#16a34a; font-weight:bold }
-    .warn { color:#b45309; font-weight:bold }
+    :root{
+      --bg1:#0b1220;
+      --bg2:#0f1d3a;
+      --card:#ffffff;
+      --ink:#0f172a;
+      --muted:#64748b;
 
-    .pill { display:inline-block; padding:4px 10px; border-radius:999px; background:#e5e7eb; font-size:12px; margin-left:8px; font-weight:700 }
-    .pill.ok { background: rgba(34,197,94,0.15); color:#166534; }
-    .pill.bad { background: rgba(220,38,38,0.12); color:#991b1b; }
-    .pill.neutral { background:#e5e7eb; color:#111827; }
+      --primary:#2563eb;
+      --primary2:#1d4ed8;
+      --ring:rgba(37,99,235,.22);
 
-    .box { margin-top:18px; padding:16px; border-radius:12px; background:#f9fafb; border:1px solid #eef2f7 }
-    ul { margin: 8px 0 0 18px; }
-    .row { display:flex; gap:14px; flex-wrap:wrap; align-items:center; }
-    .row label { white-space: nowrap; font-weight:700; }
-    select { padding:8px 10px; border-radius:10px; border:1px solid #d1d5db; background:#fff }
-    button { padding:10px 16px; margin-top:10px; margin-right:10px; cursor:pointer; border-radius:12px; border:none; font-weight:800 }
-    .check { background:#2563eb; color:#fff }
-    .ghost { background:#e5e7eb; color:#111827 }
-    .statusbar { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:10px; }
-    .small { font-size:12px; }
-    .hr { height:1px; background:#eef2f7; margin:12px 0; }
-    a { color:#2563eb; text-decoration:none; }
-    a:hover { text-decoration:underline; }
+      --ok:#16a34a;
+      --bad:#dc2626;
+      --warn:#b45309;
 
-    .tag { display:inline-block; padding:2px 8px; border-radius:999px; font-size:12px; background:#eef2f7; margin-right:6px; }
-    .tag.red { background:rgba(220,38,38,0.10); color:#991b1b; }
-    .tag.green { background:rgba(34,197,94,0.12); color:#166534; }
-    .tag.gray { background:#eef2f7; color:#111827; }
+      --border:#e2e8f0;
+      --soft:#f8fafc;
+      --shadow: 0 14px 35px rgba(2,6,23,.10);
+      --shadow2: 0 6px 18px rgba(2,6,23,.08);
+      --radius: 18px;
+    }
 
-    /* Highlighter overlay */
-    .editor-wrap { position: relative; width: 100%; margin-top:12px; }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family: "Prompt", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(900px 420px at 12% 10%, rgba(37,99,235,.22), transparent 55%),
+        radial-gradient(900px 500px at 85% 15%, rgba(16,185,129,.18), transparent 55%),
+        radial-gradient(850px 520px at 50% 98%, rgba(245,158,11,.10), transparent 55%),
+        linear-gradient(180deg, #eef2ff 0%, #f8fafc 55%, #ffffff 100%);
+      min-height: 100vh;
+    }
+
+    /* Top header bar */
+    .topbar{
+      position: sticky;
+      top:0;
+      z-index: 10;
+      backdrop-filter: blur(10px);
+      background: rgba(255,255,255,.72);
+      border-bottom: 1px solid rgba(226,232,240,.65);
+    }
+    .topbar-inner{
+      max-width: 1160px;
+      margin: 0 auto;
+      padding: 14px 18px;
+      display:flex;
+      gap:14px;
+      align-items:center;
+      justify-content:space-between;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      min-width: 260px;
+    }
+    .logo{
+      width:42px; height:42px;
+      border-radius: 14px;
+      display:grid;
+      place-items:center;
+      color:white;
+      background: linear-gradient(135deg, var(--primary), #22c55e);
+      box-shadow: 0 10px 24px rgba(37,99,235,.25);
+      flex: 0 0 auto;
+    }
+    .brand-title{
+      display:flex;
+      flex-direction:column;
+      line-height:1.1;
+    }
+    .brand-title b{
+      font-size: 18px;
+      letter-spacing: .2px;
+    }
+    .brand-title span{
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    .top-actions{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.75);
+      box-shadow: 0 6px 14px rgba(2,6,23,.05);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--ink);
+      white-space: nowrap;
+    }
+    .dot{
+      width:8px;height:8px;border-radius:999px;background:#94a3b8;
+    }
+    .dot.ok{ background: var(--ok); }
+    .dot.bad{ background: var(--bad); }
+    .dot.neutral{ background:#94a3b8; }
+
+    .pill a{
+      color: var(--primary2);
+      text-decoration:none;
+      font-weight:700;
+    }
+
+    /* Layout */
+    .wrap{
+      max-width: 1160px;
+      margin: 0 auto;
+      padding: 18px 18px 50px;
+    }
+
+    .hero{
+      display:grid;
+      grid-template-columns: 1.25fr .75fr;
+      gap: 14px;
+      margin-top: 16px;
+    }
+    @media (max-width: 980px){
+      .hero{ grid-template-columns: 1fr; }
+      .brand{ min-width: unset; }
+    }
+
+    .card{
+      background: var(--card);
+      border: 1px solid rgba(226,232,240,.8);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow2);
+      overflow:hidden;
+    }
+    .card-header{
+      padding: 16px 18px;
+      border-bottom: 1px solid rgba(226,232,240,.75);
+      background: linear-gradient(180deg, rgba(248,250,252,.95), rgba(255,255,255,.95));
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .card-header h2{
+      margin:0;
+      font-size: 16px;
+      letter-spacing: .2px;
+    }
+    .card-header p{
+      margin: 4px 0 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .card-body{ padding: 16px 18px; }
+
+    /* Editor */
+    .editor-wrap { position: relative; width: 100%; }
     .highlighter {
       position: absolute;
       inset: 0;
-      padding: 12px;
+      padding: 14px;
       font-size: 15px;
-      line-height: 1.6;
+      line-height: 1.7;
       white-space: pre-wrap;
       word-wrap: break-word;
       overflow: auto;
-      border: 1px solid #d1d5db;
-      border-radius: 14px;
+      border: 1px solid var(--border);
+      border-radius: 16px;
       background: #fff;
       pointer-events: none;
-      color: #111827;
+      color: var(--ink);
     }
     textarea.editor {
       position: relative;
       width: 100%;
-      height: 200px;
-      padding: 12px;
+      height: 210px;
+      padding: 14px;
       font-size: 15px;
-      line-height: 1.6;
+      line-height: 1.7;
       border: 1px solid transparent;
-      border-radius: 14px;
+      border-radius: 16px;
       background: transparent;
-      color: transparent;
-      caret-color: #111827;
+      color: transparent;       /* hide typed text, show highlighter below */
+      caret-color: var(--ink);
       resize: vertical;
       overflow: auto;
       outline: none;
     }
+    textarea.editor:focus + .focus-ring { display:none; }
     .hl-ok { background: rgba(34, 197, 94, 0.25); border-radius: 8px; padding: 0 2px; }
     .hl-bad { background: rgba(220, 38, 38, 0.25); border-radius: 8px; padding: 0 2px; }
 
-    #suggestions { margin-top:10px; }
-    .suggestion-box { margin-top:12px; padding:12px; border-radius:12px; background:#fff; border:1px dashed #d1d5db; }
-    .suggestion-box h4 { margin:0 0 8px 0; }
+    /* Buttons */
+    .btns{ display:flex; gap:10px; flex-wrap:wrap; margin-top: 12px; }
+    .btn{
+      border: none;
+      border-radius: 14px;
+      padding: 11px 14px;
+      font-weight: 700;
+      cursor: pointer;
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      transition: transform .04s ease, box-shadow .2s ease, background .2s ease;
+      box-shadow: 0 10px 22px rgba(2,6,23,.08);
+      user-select:none;
+    }
+    .btn:active{ transform: translateY(1px); }
+    .btn-primary{
+      color: #fff;
+      background: linear-gradient(135deg, var(--primary), var(--primary2));
+    }
+    .btn-primary:hover{ filter: brightness(1.02); }
+    .btn-ghost{
+      color: var(--ink);
+      background: #eef2ff;
+      border: 1px solid rgba(37,99,235,.18);
+      box-shadow: none;
+    }
+    .btn-ghost:hover{ background:#e0e7ff; }
+
+    .btn-icon{
+      width:22px;height:22px; display:grid; place-items:center;
+      border-radius: 10px;
+      background: rgba(255,255,255,.18);
+    }
+    .btn-ghost .btn-icon{ background: rgba(37,99,235,.10); }
+
+    /* Result */
+    .result-row{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      margin-bottom: 10px;
+    }
+    .badge{
+      display:inline-flex; align-items:center; gap:8px;
+      padding: 7px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      font-size: 12px;
+      font-weight: 700;
+      background: var(--soft);
+    }
+    .badge.bad{ color: #991b1b; background: rgba(220,38,38,.08); border-color: rgba(220,38,38,.18); }
+    .badge.warn{ color: #92400e; background: rgba(245,158,11,.12); border-color: rgba(245,158,11,.22); }
+    .badge.ok{ color: #166534; background: rgba(34,197,94,.10); border-color: rgba(34,197,94,.22); }
+
+    .result-area ul{
+      margin: 8px 0 0 18px;
+      padding:0;
+    }
+    .result-area li{ margin: 4px 0; }
+    .muted{ color: var(--muted); }
+
+    .suggestion-box{
+      margin-top: 12px;
+      padding: 12px 14px;
+      border-radius: 16px;
+      border: 1px dashed rgba(148,163,184,.7);
+      background: rgba(248,250,252,.9);
+    }
+    .suggestion-box h4{
+      margin:0 0 8px 0;
+      font-size: 13px;
+      letter-spacing: .1px;
+    }
+    .tag{
+      display:inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      margin: 4px 6px 0 0;
+      border: 1px solid rgba(34,197,94,.18);
+      background: rgba(34,197,94,.10);
+      color:#166534;
+    }
+
+    /* Guide filters */
+    .filters{
+      display:flex;
+      gap: 10px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+    .filters label{
+      font-weight: 700;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    select{
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: #fff;
+      font-weight: 600;
+      color: var(--ink);
+      min-width: 220px;
+      outline:none;
+      box-shadow: 0 8px 18px rgba(2,6,23,.04);
+    }
+    select:focus{
+      border-color: rgba(37,99,235,.45);
+      box-shadow: 0 0 0 6px var(--ring);
+    }
+
+    .guide{
+      padding: 12px 18px 18px;
+    }
+    .guide h3{
+      margin: 0 0 6px 0;
+      font-size: 14px;
+    }
+    .guide small{ color: var(--muted); font-weight: 500; }
+    .guide .hr{
+      height:1px;
+      background: rgba(226,232,240,.8);
+      margin: 14px 0;
+    }
+    .topic-block{
+      border: 1px solid rgba(226,232,240,.85);
+      border-radius: 16px;
+      padding: 12px 14px;
+      background: #fff;
+      margin-bottom: 12px;
+      box-shadow: 0 10px 22px rgba(2,6,23,.04);
+    }
+    .topic-block h4{
+      margin: 0 0 8px 0;
+      font-size: 14px;
+    }
+    .line{
+      display:flex; gap:10px; align-items:flex-start;
+      padding: 6px 0;
+      border-top: 1px dashed rgba(226,232,240,.8);
+      font-size: 13px;
+    }
+    .line:first-child{ border-top:none; }
+    .line .n{ width: 20px; color: var(--muted); font-weight: 700; }
+    .mark{
+      font-weight: 800;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      border:1px solid transparent;
+      white-space:nowrap;
+    }
+    .mark.ok{ color:#166534; background: rgba(34,197,94,.10); border-color: rgba(34,197,94,.20); }
+    .mark.bad{ color:#991b1b; background: rgba(220,38,38,.10); border-color: rgba(220,38,38,.20); }
+
+    .footer{
+      margin-top: 18px;
+      padding: 14px 16px;
+      border-radius: 16px;
+      border: 1px solid rgba(226,232,240,.9);
+      background: rgba(255,255,255,.7);
+      color: var(--muted);
+      font-size: 12px;
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      justify-content:space-between;
+    }
+    .footer b{ color: var(--ink); }
   </style>
 </head>
 
 <body>
-<div class="container">
-  <h1>🩺 Clinic Ad Checker</h1>
-  <div class="muted">ตรวจคำโฆษณา + คู่มือ (โหลดจาก Google Sheets CSV)</div>
-  <div class="muted small">Version: v8-split-bad-vs-suspect + no-rewrite</div>
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <div class="logo" aria-hidden="true">
+          <!-- Shield-check icon (SVG) -->
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+            <path d="M12 2l7 4v6c0 5-3 9-7 10-4-1-7-5-7-10V6l7-4z" stroke="white" stroke-width="1.8"/>
+            <path d="M8.6 12.3l2.1 2.1 4.7-4.7" stroke="white" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="brand-title">
+          <b>CHECK SABUY</b>
+          <span>ตรวจคำโฆษณาคลินิก + คู่มือจาก Google Sheets</span>
+        </div>
+      </div>
 
-  <div class="box">
-    <div class="statusbar">
-      <div><b>สถานะฐานข้อมูล:</b> <span id="loadStatus" class="pill neutral">กำลังโหลด…</span></div>
-      <div id="keywordCount" class="pill neutral">ใช้ได้: 0 | ใช้ไม่ได้: 0</div>
-      <div class="pill neutral" id="matchSummary">-</div>
+      <div class="top-actions">
+        <div class="pill"><span class="dot neutral" id="dotStatus"></span><span id="loadStatus">กำลังโหลดฐานข้อมูล…</span></div>
+        <div class="pill" id="keywordCount">ใช้ได้: 0 | ใช้ไม่ได้: 0</div>
+        <div class="pill" id="matchSummary">พบ: -</div>
+        <div class="pill">แหล่งข้อมูล: <a id="srcLink" target="_blank" rel="noreferrer">Google Sheets CSV</a></div>
+      </div>
     </div>
-    <div class="small muted" style="margin-top:8px">
-      แหล่งข้อมูล: <a id="srcLink" target="_blank" rel="noreferrer">Google Sheets CSV</a>
+  </div>
+
+  <div class="wrap">
+    <div class="hero">
+      <!-- Left: Checker -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h2>🧾 ตรวจข้อความโฆษณา</h2>
+            <p>ไฮไลท์อัตโนมัติ: <b style="color:var(--ok)">เขียว</b> = ใช้ได้, <b style="color:var(--bad)">แดง</b> = ใช้ไม่ได้</p>
+          </div>
+          <div class="pill" style="margin-left:auto">
+            <span class="dot neutral"></span> โหมด: ตรวจคำ
+          </div>
+        </div>
+
+        <div class="card-body">
+          <div class="editor-wrap">
+            <div id="highlighter" class="highlighter"></div>
+            <textarea id="inputText" class="editor"
+              placeholder="วางข้อความโฆษณา/แคปชั่น/สคริปต์…"
+              oninput="syncHighlightLive()" onscroll="syncScroll()"></textarea>
+          </div>
+
+          <div class="btns">
+            <button class="btn btn-primary" onclick="checkText()">
+              <span class="btn-icon" aria-hidden="true">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <path d="M21 21l-4.3-4.3" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                  <circle cx="11" cy="11" r="7" stroke="white" stroke-width="2"/>
+                </svg>
+              </span>
+              ตรวจคำโฆษณา
+            </button>
+
+            <button class="btn btn-ghost" onclick="clearAll()">
+              <span class="btn-icon" aria-hidden="true">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <path d="M3 6h18" stroke="#1d4ed8" stroke-width="2" stroke-linecap="round"/>
+                  <path d="M8 6V4h8v2" stroke="#1d4ed8" stroke-width="2" stroke-linecap="round"/>
+                  <path d="M7 6l1 16h8l1-16" stroke="#1d4ed8" stroke-width="2" stroke-linejoin="round"/>
+                </svg>
+              </span>
+              ล้างข้อความ
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Result -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h2>📌 ผลการตรวจ</h2>
+            <p>แยก <b style="color:var(--bad)">คำที่ใช้ไม่ได้</b> และ <b style="color:var(--warn)">คำน่าสงสัย</b></p>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="result-row">
+            <span class="badge bad" id="badgeBad">✘ ใช้ไม่ได้: 0</span>
+            <span class="badge warn" id="badgeSus">⚠️ น่าสงสัย: 0</span>
+            <span class="badge ok" id="badgeOk">✔ ใช้ได้: 0</span>
+          </div>
+
+          <div id="result" class="result-area">-</div>
+          <div id="suggestions"></div>
+
+          <div class="footer" style="margin-top:14px">
+            <div>Tip: ถ้าพิมพ์ไม่ตรง 100% ระบบจะพยายามจับ “ใกล้เคียง” ในกลุ่ม <b>น่าสงสัย</b></div>
+            <div>© <b>CHECK SABUY</b></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Guide -->
+    <div class="card" style="margin-top:14px">
+      <div class="card-header">
+        <div>
+          <h2>📚 คู่มือคำโฆษณา (แยกตาม Topic)</h2>
+          <p>เลือกหมวดหมู่/Topic เพื่อดูรายการคำ “ใช้ได้ / ใช้ไม่ได้” (พร้อมคำแนะนำถ้ามี)</p>
+        </div>
+      </div>
+
+      <div class="guide">
+        <div class="filters">
+          <div>
+            <label>หมวดหมู่</label><br>
+            <select id="categoryFilter" onchange="onCategoryChange()">
+              <option value="all">ทั้งหมด</option>
+            </select>
+          </div>
+          <div>
+            <label>Topic</label><br>
+            <select id="topicFilter" onchange="renderKeywordLibrary()">
+              <option value="all">ทั้งหมด</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="hr"></div>
+        <div id="keywordLibrary"></div>
+      </div>
     </div>
   </div>
-
-  <div class="editor-wrap">
-    <div id="highlighter" class="highlighter"></div>
-    <textarea id="inputText" class="editor" placeholder="ใส่ข้อความโฆษณาคลินิกที่นี่..."
-      oninput="syncHighlightLive()" onscroll="syncScroll()"></textarea>
-  </div>
-
-  <div>
-    <button class="check" onclick="checkText()">ตรวจคำโฆษณา</button>
-    <button class="ghost" onclick="clearAll()">ล้างข้อความ</button>
-  </div>
-
-  <div class="box">
-    <h3>ผลการตรวจ</h3>
-    <div id="result">-</div>
-    <div id="suggestions"></div>
-    <div class="muted small" style="margin-top:8px">ไฮไลท์สีเขียว = ใช้ได้, สีแดง = ใช้ไม่ได้</div>
-  </div>
-
-  <div class="box">
-    <h3>📚 คู่มือคำโฆษณา (แยกตาม Topic)</h3>
-    <div class="row">
-      <label>หมวดหมู่:</label>
-      <select id="categoryFilter" onchange="onCategoryChange()">
-        <option value="all">ทั้งหมด</option>
-      </select>
-
-      <label>Topic:</label>
-      <select id="topicFilter" onchange="renderKeywordLibrary()">
-        <option value="all">ทั้งหมด</option>
-      </select>
-    </div>
-
-    <div class="hr"></div>
-    <div id="keywordLibrary"></div>
-  </div>
-</div>
 
 <script>
 /***********************
@@ -142,7 +533,7 @@ const CSV_URL =
 document.getElementById('srcLink').href = CSV_URL;
 
 /***********************
- * OPTIONAL whitelist tokens
+ * OPTIONAL whitelist tokens (เพิ่มเองได้)
  ***********************/
 const EXTRA_WHITELIST_TOKENS = [
   'botox','filler','hifu','meso','ulthera','thermage','rejuran',
@@ -185,10 +576,11 @@ function dedupeByWord(list) {
   });
 }
 
-function setPill(el, type, text) {
-  el.classList.remove('ok','bad','neutral');
-  el.classList.add(type);
+function setLoadStatus(type, text){
+  const el = document.getElementById('loadStatus');
+  const dot = document.getElementById('dotStatus');
   el.textContent = text;
+  dot.className = 'dot ' + (type || 'neutral');
 }
 
 /***********************
@@ -508,17 +900,13 @@ function getReplacement(item) {
 
 function renderSuggestionsFromBad(allBadItems) {
   const box = document.getElementById('suggestions');
-
   const reps = uniq(
     allBadItems
       .map(it => getReplacement(it))
       .filter(x => normalizeKey(x) && normalizeKey(x) !== '-')
   );
 
-  if (!allBadItems.length) {
-    box.innerHTML = '';
-    return;
-  }
+  if (!allBadItems.length) { box.innerHTML = ''; return; }
 
   if (!reps.length) {
     box.innerHTML = `
@@ -533,7 +921,7 @@ function renderSuggestionsFromBad(allBadItems) {
   box.innerHTML = `
     <div class="suggestion-box">
       <h4>💡 ข้อแนะนำ / คำโฆษณาที่แนะนำ</h4>
-      <div>${reps.map(x => `<span class="tag green">${escapeHTML(x)}</span>`).join(' ')}</div>
+      <div>${reps.map(x => `<span class="tag">${escapeHTML(x)}</span>`).join(' ')}</div>
     </div>
   `;
 }
@@ -541,6 +929,12 @@ function renderSuggestionsFromBad(allBadItems) {
 /***********************
  * CHECK (แยก "ใช้ไม่ได้" vs "น่าสงสัย")
  ***********************/
+function setBadOkSus(bad, sus, ok){
+  document.getElementById('badgeBad').textContent = `✘ ใช้ไม่ได้: ${bad}`;
+  document.getElementById('badgeSus').textContent = `⚠️ น่าสงสัย: ${sus}`;
+  document.getElementById('badgeOk').textContent  = `✔ ใช้ได้: ${ok}`;
+}
+
 function checkText() {
   const text = normalizeText(document.getElementById('inputText').value || '');
   const resultDiv = document.getElementById('result');
@@ -549,7 +943,8 @@ function checkText() {
 
   if (!allowKeywords.length && !forbidKeywords.length) {
     resultDiv.innerHTML = '<span class="muted">ยังไม่มีฐานข้อมูลคำ</span>';
-    summary.textContent = '-';
+    summary.textContent = 'พบ: -';
+    setBadOkSus(0,0,0);
     syncHighlightLive();
     return;
   }
@@ -570,13 +965,11 @@ function checkText() {
     }
   };
 
-  // exact/alias = "ใช้ไม่ได้"
   scanExact(forbidKeywords, foundBadExact);
   scanExact(allowKeywords, foundOk);
 
   const exactSet = new Set(foundBadExact.map(x => normalizeKey(x.word)));
 
-  // loose = "น่าสงสัย"
   for (const k of forbidKeywords) {
     if (exactSet.has(normalizeKey(k.word))) continue;
     const candidates = [k.word].concat(Array.isArray(k.aliases) ? k.aliases : []);
@@ -590,7 +983,6 @@ function checkText() {
 
   const looseSet = new Set(foundBadLoose.map(x => normalizeKey(x.word)));
 
-  // fuzzy = "น่าสงสัย"
   for (const k of forbidKeywords) {
     const key = normalizeKey(k.word);
     if (exactSet.has(key) || looseSet.has(key)) continue;
@@ -610,10 +1002,11 @@ function checkText() {
   const suspectU = dedupeByWord(foundBadLoose.concat(foundBadFuzzy));
   const badAll = dedupeByWord(badExactU.concat(suspectU));
 
+  setBadOkSus(badExactU.length, suspectU.length, okU.length);
   summary.textContent = `พบ: ใช้ไม่ได้ ${badExactU.length} | น่าสงสัย ${suspectU.length} | ใช้ได้ ${okU.length}`;
 
   if (!okU.length && badAll.length === 0) {
-    resultDiv.innerHTML = '<span class="warn">⚠️ ไม่พบคำในฐานข้อมูล (อาจสะกดต่าง/คำใกล้เคียง)</span>';
+    resultDiv.innerHTML = '<div class="badge warn">⚠️ ไม่พบคำในฐานข้อมูล (อาจสะกดต่าง/คำใกล้เคียง)</div>';
     syncHighlightLive();
     return;
   }
@@ -621,25 +1014,22 @@ function checkText() {
   let html = '';
 
   if (badExactU.length) {
-    html += `<div class="danger">✘ พบคำที่ใช้ไม่ได้ (${badExactU.length})</div>`;
-    html += '<ul>' + badExactU.map(x => `<li><span class="danger">${escapeHTML(x.word)}</span></li>`).join('') + '</ul>';
+    html += `<div class="badge bad">✘ คำที่ใช้ไม่ได้ (${badExactU.length})</div>`;
+    html += '<ul>' + badExactU.map(x => `<li><span style="color:var(--bad);font-weight:700">${escapeHTML(x.word)}</span></li>`).join('') + '</ul>';
   }
 
   if (suspectU.length) {
-    html += `<div class="danger" style="margin-top:10px">⚠️ พบคำน่าสงสัยว่าเข้าข่ายใช้ไม่ได้ (${suspectU.length})</div>`;
-    html += '<ul>' + suspectU.map(x => `<li><span class="danger">${escapeHTML(x.word)}</span></li>`).join('') + '</ul>';
+    html += `<div style="margin-top:12px" class="badge warn">⚠️ คำน่าสงสัยว่าเข้าข่ายใช้ไม่ได้ (${suspectU.length})</div>`;
+    html += '<ul>' + suspectU.map(x => `<li><span style="color:var(--warn);font-weight:700">${escapeHTML(x.word)}</span></li>`).join('') + '</ul>';
   }
 
   if (okU.length) {
-    html += `<div class="ok" style="margin-top:10px">✔ พบคำที่ใช้ได้ (${okU.length})</div>`;
-    html += '<ul>' + okU.map(x => `<li><span class="ok">${escapeHTML(x.word)}</span></li>`).join('') + '</ul>';
+    html += `<div style="margin-top:12px" class="badge ok">✔ คำที่ใช้ได้ (${okU.length})</div>`;
+    html += '<ul>' + okU.map(x => `<li><span style="color:var(--ok);font-weight:700">${escapeHTML(x.word)}</span></li>`).join('') + '</ul>';
   }
 
   resultDiv.innerHTML = html || '-';
-
-  // suggestions อิงจากทุกคำที่ "ใช้ไม่ได้+น่าสงสัย"
   renderSuggestionsFromBad(badAll);
-
   syncHighlightLive();
 }
 
@@ -649,8 +1039,9 @@ function checkText() {
 function clearAll() {
   document.getElementById('inputText').value = '';
   document.getElementById('result').innerHTML = '-';
-  document.getElementById('matchSummary').textContent = '-';
+  document.getElementById('matchSummary').textContent = 'พบ: -';
   document.getElementById('suggestions').innerHTML = '';
+  setBadOkSus(0,0,0);
   syncHighlightLive();
 }
 
@@ -710,26 +1101,35 @@ function renderKeywordLibrary() {
       const topicKeys = Object.keys(topicsObj).filter(tk => topic === 'all' ? true : tk === topic);
       if (!topicKeys.length) return;
 
-      html += `<div style="margin-bottom:22px"><h3>📌 ${escapeHTML(cat)}</h3>`;
+      html += `<div class="topic-block"><h4>📌 ${escapeHTML(cat)}</h4>`;
 
       for (const tk of topicKeys) {
         const t = topicsObj[tk];
         const allow = (t.allowItems||[]).slice().sort(sortNum);
         const forbid = (t.forbidItems||[]).slice().sort(sortNum);
 
-        html += `<div style="margin-left:12px;margin-bottom:14px"><h4>${escapeHTML(t.topic)}</h4>`;
+        html += `<div style="margin-top:10px">
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+            <b style="font-size:13px">${escapeHTML(t.topic)}</b>
+            <span class="mark ok">ใช้ได้</span>
+            <span class="mark bad">ใช้ไม่ได้</span>
+          </div>
+        `;
+
         let n = 1;
         for (const it of allow) {
-          html += `<div>${n}. <span class="ok">✔ ใช้ได้</span>: ${escapeHTML(it.keyword)}</div>`;
+          html += `<div class="line"><div class="n">${n}.</div><div><span class="mark ok">✔ ใช้ได้</span> ${escapeHTML(it.keyword)}</div></div>`;
           n++;
         }
         for (const it of forbid) {
           const rep = normalizeText(it.rewrite || '').trim() || '-';
-          html += `<div>${n}. <span class="danger">✘ ใช้ไม่ได้</span>: ${escapeHTML(it.keyword)} <span class="muted small">(แนะนำ: ${escapeHTML(rep)})</span></div>`;
+          html += `<div class="line"><div class="n">${n}.</div><div><span class="mark bad">✘ ใช้ไม่ได้</span> ${escapeHTML(it.keyword)} <span class="muted" style="font-size:12px">• แนะนำ: ${escapeHTML(rep)}</span></div></div>`;
           n++;
         }
+
         html += `</div>`;
       }
+
       html += `</div>`;
     });
 
@@ -740,10 +1140,8 @@ function renderKeywordLibrary() {
  * LOAD (CSV)
  ***********************/
 async function loadFromGoogleSheets() {
-  const statusEl = document.getElementById('loadStatus');
-
   try {
-    setPill(statusEl, 'neutral', 'กำลังโหลด…');
+    setLoadStatus('neutral', 'กำลังโหลดฐานข้อมูล…');
 
     const res = await fetch(CSV_URL, { cache: 'no-store' });
     const raw = await res.text();
@@ -795,7 +1193,7 @@ async function loadFromGoogleSheets() {
       const autoAliases = generateAutoAliases(keyword);
       const aliases = Array.from(new Set([].concat(manualAliases, autoAliases).filter(Boolean)));
 
-      const rewrite = normalizeText(rewriteRaw).trim(); // อาจว่าง -> แสดง '-'
+      const rewrite = normalizeText(rewriteRaw).trim(); // อาจว่าง
 
       if (isAllow) allowKeywords.push({ word: keyword, aliases });
       if (isForbid) forbidKeywords.push({ word: keyword, rewrite, aliases });
@@ -819,13 +1217,14 @@ async function loadFromGoogleSheets() {
     rebuildTopicFilter();
     renderKeywordLibrary();
     syncHighlightLive();
+    clearAll();
 
-    setPill(statusEl, 'ok', 'พร้อมใช้งาน');
+    setLoadStatus('ok', 'ฐานข้อมูลพร้อมใช้งาน');
   } catch (e) {
     console.error(e);
-    setPill(statusEl, 'bad', 'โหลดไม่สำเร็จ');
+    setLoadStatus('bad', 'โหลดฐานข้อมูลไม่สำเร็จ');
     document.getElementById('keywordLibrary').innerHTML =
-      `<div class="danger">โหลดข้อมูลจาก Google Sheets ไม่สำเร็จ</div>`;
+      `<div class="badge bad">โหลดข้อมูลจาก Google Sheets ไม่สำเร็จ</div>`;
   }
 }
 
