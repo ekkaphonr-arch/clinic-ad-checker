@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>CHECK SABUY | ตรวจคำโฆษณา คลินิก</title>
 
-  <!-- Google Font: Prompt (ฟรี) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -28,46 +27,25 @@
       --soft:#f8fafc;
       --shadow2: 0 6px 18px rgba(2,6,23,.08);
       --radius: 18px;
-
-      /* ✅ เพิ่ม: background image (วางไฟล์ชื่อ check-sabuy-bg.png ไว้โฟลเดอร์เดียวกับ .html) */
-      --bgimg: url('check-sabuy-bg.png');
     }
 
     *{ box-sizing:border-box; }
-
-    /* ✅ เพิ่มรูปเป็น background (แก้เฉพาะส่วนนี้) */
     body{
       margin:0;
       font-family: "Prompt", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
       color: var(--ink);
-
       background:
         radial-gradient(900px 420px at 12% 10%, rgba(37,99,235,.22), transparent 55%),
         radial-gradient(900px 500px at 85% 15%, rgba(16,185,129,.18), transparent 55%),
         radial-gradient(850px 520px at 50% 98%, rgba(245,158,11,.10), transparent 55%),
-        linear-gradient(180deg, rgba(238,242,255,.92) 0%, rgba(248,250,252,.92) 55%, rgba(255,255,255,.95) 100%),
-        var(--bgimg);
-
-      background-size:
-        auto, auto, auto, auto,
-        cover;
-
-      background-position:
-        center, center, center, center,
-        center;
-
-      background-repeat:
-        no-repeat, no-repeat, no-repeat, no-repeat,
-        no-repeat;
-
-      background-attachment:
-        scroll, scroll, scroll, scroll,
-        fixed;
-
+        linear-gradient(180deg, #eef2ff 0%, #f8fafc 55%, #ffffff 100%);
       min-height: 100vh;
     }
 
-    /* Top header bar */
+    .admin-only{ display:none !important; }
+    body.is-admin .admin-only{ display:inline-flex !important; }
+    body.is-admin .admin-only.block{ display:block !important; }
+
     .topbar{
       position: sticky;
       top:0;
@@ -139,9 +117,7 @@
       color: var(--ink);
       white-space: nowrap;
     }
-    .dot{
-      width:8px;height:8px;border-radius:999px;background:#94a3b8;
-    }
+    .dot{ width:8px;height:8px;border-radius:999px;background:#94a3b8; }
     .dot.ok{ background: var(--ok); }
     .dot.bad{ background: var(--bad); }
     .dot.neutral{ background:#94a3b8; }
@@ -152,7 +128,6 @@
       font-weight:700;
     }
 
-    /* Layout */
     .wrap{
       max-width: 1160px;
       margin: 0 auto;
@@ -200,7 +175,6 @@
 
     .card-body{ padding: 16px 18px; }
 
-    /* Editor */
     .editor-wrap { position: relative; width: 100%; }
     .highlighter {
       position: absolute;
@@ -239,7 +213,6 @@
     .hl-bad { background: rgba(220, 38, 38, 0.25); border-radius: 8px; padding: 0 2px; }
     .hl-sus { background: rgba(245, 158, 11, 0.25); border-radius: 8px; padding: 0 2px; } /* น่าสงสัย */
 
-    /* Buttons */
     .btns{ display:flex; gap:10px; flex-wrap:wrap; margin-top: 12px; }
     .btn{
       border: none;
@@ -275,7 +248,6 @@
     }
     .btn-ghost .btn-icon{ background: rgba(37,99,235,.10); }
 
-    /* Result */
     .result-row{
       display:flex;
       gap:10px;
@@ -340,7 +312,6 @@
       color:#991b1b;
     }
 
-    /* Guide filters */
     .filters{
       display:flex;
       gap: 10px;
@@ -450,22 +421,27 @@
       </div>
 
       <div class="top-actions">
-        <div class="pill"><span class="dot neutral" id="dotStatus"></span><span id="loadStatus">กำลังโหลดฐานข้อมูล…</span></div>
-        <div class="pill" id="keywordCount">ใช้ได้: 0 | ใช้ไม่ได้: 0</div>
+        <div class="pill admin-only"><span class="dot neutral" id="dotStatus"></span><span id="loadStatus">กำลังโหลดฐานข้อมูล…</span></div>
+        <div class="pill admin-only" id="keywordCount">ใช้ได้: 0 | ใช้ไม่ได้: 0</div>
+        <div class="pill admin-only">แหล่งข้อมูล: <a id="srcLink" target="_blank" rel="noreferrer">Google Sheets CSV</a></div>
+
         <div class="pill" id="matchSummary">พบ: -</div>
-        <div class="pill">แหล่งข้อมูล: <a id="srcLink" target="_blank" rel="noreferrer">Google Sheets CSV</a></div>
       </div>
     </div>
   </div>
 
   <div class="wrap">
     <div class="hero">
-      <!-- Left: Checker -->
       <div class="card">
         <div class="card-header">
           <div>
             <h2>🧾 ตรวจข้อความโฆษณา</h2>
-            <p>ไฮไลท์อัตโนมัติ: <b style="color:var(--ok)">เขียว</b> = ใช้ได้, <b style="color:var(--bad)">แดง</b> = ใช้ไม่ได้, <b style="color:var(--warn)">ส้ม</b> = น่าสงสัย</p>
+            <p>
+              ไฮไลท์อัตโนมัติ:
+              <b style="color:var(--ok)">เขียว</b> = ใช้ได้,
+              <b style="color:var(--bad)">แดง</b> = ใช้ไม่ได้,
+              <b style="color:var(--warn)">ส้ม</b> = น่าสงสัย
+            </p>
           </div>
           <div class="pill" style="margin-left:auto">
             <span class="dot neutral"></span> โหมด: ตรวจคำ
@@ -505,7 +481,6 @@
         </div>
       </div>
 
-      <!-- Right: Result -->
       <div class="card">
         <div class="card-header">
           <div>
@@ -524,14 +499,13 @@
           <div id="suggestions"></div>
 
           <div class="footer" style="margin-top:14px">
-            <div>Tip: ถ้าพิมพ์ไม่ตรง 100% ระบบจะพยายามจับ “ใกล้เคียง” ในกลุ่ม <b>น่าสงสัย</b></div>
+            <div>Tip: “คำน่าสงสัย” จะถูกไฮไลต์สีส้มในช่องข้อความด้วย (หลังจากกดตรวจ)</div>
             <div>© <b>CHECK SABUY</b></div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Guide -->
     <div class="card" style="margin-top:14px">
       <div class="card-header">
         <div>
@@ -564,15 +538,20 @@
 
 <script>
 /***********************
- * CSV URL (Publish to web)
+ * Admin mode toggle
+ ***********************/
+(function initAdminMode(){
+  const isAdmin = new URLSearchParams(location.search).get('admin') === '1';
+  if (isAdmin) document.body.classList.add('is-admin');
+})();
+
+/***********************
+ * CSV URL
  ***********************/
 const CSV_URL =
   'https://docs.google.com/spreadsheets/d/e/2PACX-1vTYcW7K_bjXlX3ns7Ok_4mbb_45ogxQHwKwyw-2Im9v1iUlS96TPICBy_5t5n973tP3YB1qEB9mQTqc/pub?output=csv';
 document.getElementById('srcLink').href = CSV_URL;
 
-/***********************
- * OPTIONAL whitelist tokens (เพิ่มเองได้)
- ***********************/
 const EXTRA_WHITELIST_TOKENS = [
   'botox','filler','hifu','meso','ulthera','thermage','rejuran',
   'โบท็อก','โบทอก','ฟิลเลอร์','ไฮฟู','เมโส','ร้อยไหม','เลเซอร์','รีจูรัน'
@@ -582,9 +561,11 @@ const EXTRA_WHITELIST_TOKENS = [
  * STATE
  ***********************/
 const keywordLibraryData = {};
-let allowKeywords = [];   // { word, aliases?:[] , rewrite?:'' }
-let forbidKeywords = [];  // { word, rewrite, aliases?:[] }
+let allowKeywords = [];
+let forbidKeywords = [];
 let whitelistTokens = new Set();
+
+/* ✅ จุดสำคัญ: เก็บ “คำที่จะไฮไลต์เป็นคำน่าสงสัย” ตาม “สิ่งที่พบจริงในข้อความผู้ใช้” */
 let lastSuspectHighlightTargets = []; // [{word, aliases?:[]}...]
 
 /***********************
@@ -622,6 +603,7 @@ function dedupeByWord(list) {
 function setLoadStatus(type, text){
   const el = document.getElementById('loadStatus');
   const dot = document.getElementById('dotStatus');
+  if (!el || !dot) return;
   el.textContent = text;
   dot.className = 'dot ' + (type || 'neutral');
 }
@@ -768,7 +750,6 @@ function normalizeThaiLite(s) {
     .replace(/ๆ/g, '')
     .trim();
 }
-
 function levenshtein(a, b) {
   a = a || ''; b = b || '';
   const m = a.length, n = b.length;
@@ -785,20 +766,17 @@ function levenshtein(a, b) {
   }
   return dp[m][n];
 }
-
 function tokenizeUserText(raw) {
   return String(raw || '')
     .split(/[\s,.;:!?()\[\]{}"“”'‘’\-_/\\|]+/g)
     .map(x => x.trim())
     .filter(Boolean);
 }
-
 function fuzzyThreshold(len) {
   if (len <= 4) return 0;
   if (len <= 7) return 1;
   return 2;
 }
-
 function rebuildWhitelistTokens() {
   const set = new Set();
   for (const k of forbidKeywords) {
@@ -817,7 +795,6 @@ function rebuildWhitelistTokens() {
   }
   whitelistTokens = set;
 }
-
 function isWhitelistedToken(token) {
   const tN = normalizeThaiLite(token);
   if (!tN) return false;
@@ -829,7 +806,6 @@ function isWhitelistedToken(token) {
   }
   return false;
 }
-
 function extractWhitelistSubtokens(text) {
   const tN = normalizeThaiLite(text);
   const out = [];
@@ -840,7 +816,6 @@ function extractWhitelistSubtokens(text) {
   }
   return out;
 }
-
 function fuzzyHitKeywordWhitelisted(userText, keyword) {
   const kwN = normalizeThaiLite(keyword);
   if (!kwN || kwN.length < 3) return { hit:false };
@@ -866,7 +841,7 @@ function fuzzyHitKeywordWhitelisted(userText, keyword) {
 }
 
 /***********************
- * HIGHLIGHT
+ * HIGHLIGHT (สำคัญ)
  ***********************/
 function syncScroll() {
   const ta = document.getElementById('inputText');
@@ -956,8 +931,9 @@ function buildHighlights(text) {
     }
   };
 
+  // ✅ ไฮไลต์ในช่องข้อความ: bad > sus > ok
   pushMatches(allowKeywords, 'ok');
-  pushMatches(lastSuspectHighlightTargets, 'sus');
+  pushMatches(lastSuspectHighlightTargets, 'sus'); // <-- “น่าสงสัย” จากที่เจอจริงในข้อความผู้ใช้
   pushMatches(forbidKeywords, 'bad');
 
   return renderHighlightWithSpans(original, spans);
@@ -1064,6 +1040,8 @@ function checkText() {
   const resultDiv = document.getElementById('result');
   const summary = document.getElementById('matchSummary');
   document.getElementById('suggestions').innerHTML = '';
+
+  // รีเซ็ตเป้าหมายไฮไลต์ส้มทุกครั้งที่กดตรวจ
   lastSuspectHighlightTargets = [];
 
   if (!allowKeywords.length && !forbidKeywords.length) {
@@ -1095,6 +1073,7 @@ function checkText() {
 
   const exactSet = new Set(foundBadExact.map(x => normalizeKey(x.word)));
 
+  // suspect: loose contains (เช่น before - after) -> ไฮไลต์ส้มด้วย keyword เดิม (regex จะหาเจอในข้อความจริง)
   for (const k of forbidKeywords) {
     if (exactSet.has(normalizeKey(k.word))) continue;
     const candidates = [k.word].concat(Array.isArray(k.aliases) ? k.aliases : []);
@@ -1104,12 +1083,13 @@ function checkText() {
     }
     if (hitLoose) {
       foundBadLoose.push(k);
-      lastSuspectHighlightTargets.push(k);
+      lastSuspectHighlightTargets.push(k); // ✅ ไฮไลต์ส้มในช่องข้อความ
     }
   }
 
   const looseSet = new Set(foundBadLoose.map(x => normalizeKey(x.word)));
 
+  // suspect: fuzzy (พิมพ์เพี้ยน) -> ไฮไลต์ส้ม “คำที่พบจริงในข้อความ” จาก hit.sample
   for (const k of forbidKeywords) {
     const key = normalizeKey(k.word);
     if (exactSet.has(key) || looseSet.has(key)) continue;
@@ -1123,8 +1103,13 @@ function checkText() {
     }
     if (hit.hit) {
       foundBadFuzzy.push(k);
-      if (hit.sample) lastSuspectHighlightTargets.push({ word: hit.sample, aliases: [] });
-      else lastSuspectHighlightTargets.push(k);
+
+      // ✅ ไฮไลต์ส้มจากสิ่งที่ “ผู้ใช้พิมพ์จริง”
+      if (hit.sample) {
+        lastSuspectHighlightTargets.push({ word: hit.sample, aliases: [] });
+      } else {
+        lastSuspectHighlightTargets.push(k);
+      }
     }
   }
 
@@ -1132,6 +1117,8 @@ function checkText() {
   const badExactU = dedupeByWord(foundBadExact);
   const suspectU = dedupeByWord(foundBadLoose.concat(foundBadFuzzy));
   const badAll = dedupeByWord(badExactU.concat(suspectU));
+
+  // กันซ้ำ/กันเป้าหมายว่าง
   lastSuspectHighlightTargets = dedupeByWord(lastSuspectHighlightTargets);
 
   setBadOkSus(badExactU.length, suspectU.length, okU.length);
@@ -1162,6 +1149,8 @@ function checkText() {
 
   resultDiv.innerHTML = html || '-';
   renderSuggestions(badAll, okU);
+
+  // ✅ สำคัญ: หลังตรวจแล้ว ไฮไลต์ส้มต้องขึ้นในช่องข้อความ
   syncHighlightLive();
 }
 
@@ -1193,7 +1182,6 @@ function rebuildCategoryFilter() {
       select.appendChild(opt);
     });
 }
-
 function rebuildTopicFilter() {
   const cat = document.getElementById('categoryFilter').value;
   const topicSelect = document.getElementById('topicFilter');
@@ -1212,12 +1200,10 @@ function rebuildTopicFilter() {
     topicSelect.appendChild(opt);
   });
 }
-
 function onCategoryChange() {
   rebuildTopicFilter();
   renderKeywordLibrary();
 }
-
 function renderKeywordLibrary() {
   const category = document.getElementById('categoryFilter').value;
   const topic = document.getElementById('topicFilter').value;
@@ -1351,15 +1337,14 @@ async function loadFromGoogleSheets() {
     forbidKeywords = dedupeByWord(forbidKeywords);
     rebuildWhitelistTokens();
 
-    document.getElementById('keywordCount').textContent =
-      `ใช้ได้: ${allowKeywords.length} | ใช้ไม่ได้: ${forbidKeywords.length}`;
+    const kc = document.getElementById('keywordCount');
+    if (kc) kc.textContent = `ใช้ได้: ${allowKeywords.length} | ใช้ไม่ได้: ${forbidKeywords.length}`;
 
     rebuildCategoryFilter();
     rebuildTopicFilter();
     renderKeywordLibrary();
-    syncHighlightLive();
-    clearAll();
 
+    clearAll();
     setLoadStatus('ok', 'ฐานข้อมูลพร้อมใช้งาน');
   } catch (e) {
     console.error(e);
