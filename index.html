@@ -28,7 +28,6 @@
 
       --border:#e2e8f0;
       --soft:#f8fafc;
-      --shadow: 0 14px 35px rgba(2,6,23,.10);
       --shadow2: 0 6px 18px rgba(2,6,23,.08);
       --radius: 18px;
     }
@@ -217,7 +216,6 @@
       overflow: auto;
       outline: none;
     }
-    textarea.editor:focus + .focus-ring { display:none; }
     .hl-ok { background: rgba(34, 197, 94, 0.25); border-radius: 8px; padding: 0 2px; }
     .hl-bad { background: rgba(220, 38, 38, 0.25); border-radius: 8px; padding: 0 2px; }
 
@@ -303,7 +301,6 @@
       font-size: 12px; font-weight: 800;
       margin-bottom: 6px;
     }
-    .s-title .dot{ width:8px;height:8px; }
     .tag{
       display:inline-block;
       padding: 6px 10px;
@@ -357,11 +354,6 @@
     .guide{
       padding: 12px 18px 18px;
     }
-    .guide h3{
-      margin: 0 0 6px 0;
-      font-size: 14px;
-    }
-    .guide small{ color: var(--muted); font-weight: 500; }
     .guide .hr{
       height:1px;
       background: rgba(226,232,240,.8);
@@ -398,7 +390,7 @@
     .line:first-child{ border-top:none; }
     .line .n{ width: 20px; color: var(--muted); font-weight: 700; }
 
-    /* จุดสีหน้า keyword (แทนไอคอน/ป้าย ใช้ได้-ใช้ไม่ได้ ใน topic) */
+    /* จุดสีหน้า keyword */
     .kdot{
       display:inline-block;
       width: 8px;
@@ -452,7 +444,7 @@
         <div class="pill admin-only" id="keywordCount">ใช้ได้: 0 | ใช้ไม่ได้: 0</div>
         <div class="pill admin-only">แหล่งข้อมูล: <a id="srcLink" target="_blank" rel="noreferrer">Google Sheets CSV</a></div>
 
-        <!-- อันนี้ยังแสดงให้ผู้ใช้ได้ (สรุปผลตรวจ) -->
+        <!-- อันนี้แสดงให้ผู้ใช้ได้ -->
         <div class="pill" id="matchSummary">พบ: -</div>
       </div>
     </div>
@@ -524,7 +516,7 @@
           <div id="suggestions"></div>
 
           <div class="footer" style="margin-top:14px">
-            <div>Tip: ระบบรองรับเว้นวรรค/ขีด/สัญลักษณ์ที่ต่างกัน เช่น <b>before - after</b>, <b>before–after</b>, <b>before/after</b></div>
+            <div>Tip: รองรับเว้นวรรค/ขีด/สัญลักษณ์ เช่น <b>before - after</b>, <b>before–after</b>, <b>before/after</b> และ “คำยาว” จะจับจากคำย่อ/ช่วงสำคัญอัตโนมัติ</div>
             <div>© <b>CHECK SABUY</b></div>
           </div>
         </div>
@@ -617,11 +609,11 @@ function buildFlexibleRegex(keyword) {
   const raw = normalizeText(keyword).trim();
   if (!raw) return null;
 
-  // ดึงเป็น token เฉพาะตัวอักษร/เลข/ไทย (ตัดพวก - / ฯลฯ ออก)
+  // ดึง token เฉพาะตัวอักษร/เลข/ไทย (ตัดพวก - / ฯลฯ ออก)
   const tokens = raw.match(/[\u0E00-\u0E7Fa-zA-Z0-9]+/g);
   if (!tokens || !tokens.length) return null;
 
-  // อนุญาตตัวคั่นได้หลากหลาย (เว้นวรรค/ขีด/สแลช/จุลภาค/วงเล็บ ฯลฯ) หรือไม่มีตัวคั่นเลยก็ได้
+  // อนุญาตตัวคั่นได้หลากหลาย หรือไม่มีตัวคั่นเลยก็ได้
   const SEP = '[\\s\\-–—_/\\\\|.,;:!?()\\[\\]{}"“”\\\'‘’]*';
   const pattern = tokens.map(t => escapeRegExp(t)).join(SEP);
 
@@ -701,7 +693,7 @@ function parseAliases(raw) {
 }
 
 /***********************
- * AUTO-ALIASES
+ * AUTO-ALIASES (เดิม)
  ***********************/
 function generateAutoAliases(word) {
   const w = normalizeText(word || '').trim();
@@ -744,6 +736,48 @@ function generateAutoAliases(word) {
 
   out.delete(w);
   return Array.from(out).map(x=>x.trim()).filter(x => x && x.length >= 2);
+}
+
+/***********************
+ * SMART ALIASES (ใหม่) — แก้ปัญหา “คำยาวต้องพิมพ์ครบ”
+ * ตัวอย่าง: "ถึงชั้น SMAS (Superficial Musculo-Aponeurotic System)"
+ * -> alias อัตโนมัติ: "SMAS", "ถึงชั้น SMAS", "ถึงชั้น SMAS Superficial" ฯลฯ
+ ***********************/
+function extractAcronyms(text) {
+  const s = String(text || '');
+  const hits = s.match(/\b[A-Z][A-Z0-9]{1,10}\b/g) || [];
+  return hits.map(x => x.trim()).filter(Boolean);
+}
+
+function extractPrefixPhrases(text) {
+  const tokens = (String(text || '').match(/[\u0E00-\u0E7Fa-zA-Z0-9]+/g) || [])
+    .map(t => t.trim())
+    .filter(Boolean);
+  const out = [];
+  if (tokens.length >= 2) out.push(tokens.slice(0, 2).join(' ')); // เช่น "ถึงชั้น SMAS"
+  if (tokens.length >= 3) out.push(tokens.slice(0, 3).join(' '));
+  return out;
+}
+
+function generateSmartAliases(keyword) {
+  const w = normalizeText(keyword || '').trim();
+  if (!w) return [];
+  const out = new Set();
+
+  // 1) คำย่อจากทั้งบรรทัด
+  extractAcronyms(w).forEach(a => out.add(a));
+
+  // 2) prefix phrase (2-3 token แรก)
+  extractPrefixPhrases(w).forEach(p => out.add(p));
+
+  // 3) ถ้ามีวงเล็บ ดึงคำย่อจากในวงเล็บเพิ่ม
+  const paren = [...w.matchAll(/[\(\（]\s*([^)\）]+?)\s*[\)\）]/g)].map(m => (m[1] || '').trim());
+  for (const inside of paren) {
+    extractAcronyms(inside).forEach(a => out.add(a));
+  }
+
+  // กัน alias สั้น/มั่ว
+  return [...out].filter(x => x && x.length >= 3);
 }
 
 /***********************
@@ -961,7 +995,6 @@ function renderSuggestions(badItems, okItems) {
     return;
   }
 
-  // ถ้ามีคำเจอ แต่ไม่มีคำแนะนำเลย
   if (!okRecs.length && !badRecs.length) {
     box.innerHTML = `
       <div class="suggestion-box">
@@ -972,9 +1005,7 @@ function renderSuggestions(badItems, okItems) {
     return;
   }
 
-  let html = `<div class="suggestion-box">
-    <h4>💡 ข้อแนะนำ / คำโฆษณาที่แนะนำ</h4>
-  `;
+  let html = `<div class="suggestion-box"><h4>💡 ข้อแนะนำ / คำโฆษณาที่แนะนำ</h4>`;
 
   if (okRecs.length) {
     html += `
@@ -999,7 +1030,7 @@ function renderSuggestions(badItems, okItems) {
 }
 
 /***********************
- * CHECK (แยก "ใช้ไม่ได้" vs "น่าสงสัย")
+ * CHECK
  ***********************/
 function setBadOkSus(bad, sus, ok){
   document.getElementById('badgeBad').textContent = `✘ ใช้ไม่ได้: ${bad}`;
@@ -1007,7 +1038,7 @@ function setBadOkSus(bad, sus, ok){
   document.getElementById('badgeOk').textContent  = `✔ ใช้ได้: ${ok}`;
 }
 
-// loose contains: ตัดช่องว่าง/สัญลักษณ์ออก เพื่อจับคำยาว ๆ แบบ before - after ได้
+// loose contains: ตัดช่องว่าง/สัญลักษณ์ออก เพื่อจับ before - after ฯลฯ
 function normalizeForContains(s){
   return String(s || '')
     .toLowerCase()
@@ -1022,7 +1053,7 @@ function looseContains(text, keyword){
   const t = normalizeForContains(text);
   const k = normalizeForContains(keyword);
   if (!t || !k) return false;
-  if (k.length < 4) return false;          // กัน false positive
+  if (k.length < 4) return false;
   return t.includes(k);
 }
 
@@ -1061,7 +1092,7 @@ function checkText() {
 
   const exactSet = new Set(foundBadExact.map(x => normalizeKey(x.word)));
 
-  // น่าสงสัย: ถ้าไม่เจอแบบ exact แต่เจอแบบตัดสัญลักษณ์/เว้นวรรค (เช่น before - after)
+  // น่าสงสัย: ตัดสัญลักษณ์/เว้นวรรค (เช่น before - after)
   for (const k of forbidKeywords) {
     if (exactSet.has(normalizeKey(k.word))) continue;
 
@@ -1071,13 +1102,12 @@ function checkText() {
     for (const c of candidates) {
       if (looseContains(text, c)) { hitLoose = true; break; }
     }
-
     if (hitLoose) foundBadLoose.push(k);
   }
 
   const looseSet = new Set(foundBadLoose.map(x => normalizeKey(x.word)));
 
-  // fuzzy เดิม (พิมพ์คลาดเล็กน้อย) สำหรับกลุ่มคำต้องห้าม
+  // fuzzy เดิม สำหรับกลุ่มคำต้องห้าม (กันมั่วด้วย whitelistTokens)
   for (const k of forbidKeywords) {
     const key = normalizeKey(k.word);
     if (exactSet.has(key) || looseSet.has(key)) continue;
@@ -1125,7 +1155,7 @@ function checkText() {
 
   resultDiv.innerHTML = html || '-';
 
-  // ✅ เพิ่มคำแนะนำทั้งฝั่งใช้ได้และใช้ไม่ได้
+  // ✅ แสดงคำแนะนำทั้งฝั่งใช้ได้และใช้ไม่ได้
   renderSuggestions(badAll, okU);
 
   syncHighlightLive();
@@ -1206,7 +1236,7 @@ function renderKeywordLibrary() {
         const allow = (t.allowItems||[]).slice().sort(sortNum);
         const forbid = (t.forbidItems||[]).slice().sort(sortNum);
 
-        // ✅ ตามที่ขอ: ไม่ต้องโชว์ไอคอน/ป้าย ใช้ได้/ใช้ไม่ได้ ที่หัวข้อ Topic แล้ว
+        // ✅ ตามที่ขอ: ไม่โชว์ไอคอน/ป้าย ใช้ได้/ใช้ไม่ได้ ที่หัวข้อ Topic แล้ว
         html += `<div class="topic-title"><b>${escapeHTML(t.topic)}</b></div>`;
 
         let n = 1;
@@ -1297,9 +1327,10 @@ async function loadFromGoogleSheets() {
 
       const manualAliases = parseAliases(aliasesRaw);
       const autoAliases = generateAutoAliases(keyword);
-      const aliases = Array.from(new Set([].concat(manualAliases, autoAliases).filter(Boolean)));
+      const smartAliases = generateSmartAliases(keyword); // ✅ ตัวสำคัญที่ทำให้ “คำยาว” เจอจาก SMAS/ช่วงต้น
+      const aliases = Array.from(new Set([].concat(manualAliases, autoAliases, smartAliases).filter(Boolean)));
 
-      const rewrite = normalizeText(rewriteRaw).trim(); // ✅ ใช้ได้ก็มีคำแนะนำได้
+      const rewrite = normalizeText(rewriteRaw).trim(); // ใช้ได้ก็มีคำแนะนำได้
 
       if (isAllow) allowKeywords.push({ word: keyword, rewrite, aliases });
       if (isForbid) forbidKeywords.push({ word: keyword, rewrite, aliases });
@@ -1316,7 +1347,6 @@ async function loadFromGoogleSheets() {
     forbidKeywords = dedupeByWord(forbidKeywords);
     rebuildWhitelistTokens();
 
-    // admin-only UI
     const kc = document.getElementById('keywordCount');
     if (kc) kc.textContent = `ใช้ได้: ${allowKeywords.length} | ใช้ไม่ได้: ${forbidKeywords.length}`;
 
@@ -1342,4 +1372,3 @@ loadFromGoogleSheets();
 </script>
 </body>
 </html>
-
